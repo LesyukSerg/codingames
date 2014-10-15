@@ -24,17 +24,17 @@ for ($i = 0; $i < $N; $i++) {
         error_log(var_export($Y_landing, true));
         error_log(var_export($X1_landing, true));
         error_log(var_export($X2_landing, true));
-        
-        die;
     }
 }
 
 
 
-
+$i = 0;
+$flag = 0;
 // game loop
 while (TRUE)
 {
+    $i++;
     fscanf(STDIN, "%d %d %d %d %d %d %d",
         $X,
         $Y,
@@ -44,10 +44,22 @@ while (TRUE)
         $R, // the rotation angle in degrees (-90 to 90).
         $P // the thrust power (0 to 4).
     );
-
+    
+    if($VS < -44)
+        $flag++;
+   // $X - $X1_landing > 0 > $X - $X2_landing;
+    //if($VS < -38)
+    if($flag)
+        echo("0 4\n");
+    else
+        echo("0 0\n");
+        
+    //if($i < 10)
+      //  echo("-60 4\n");
+    //else
     // Write an action using echo(). DON'T FORGET THE TRAILING \n
     // To debug (equivalent to var_dump): error_log(var_export($var, true));
 
-    echo("-20 3\n"); // R P. R is the desired rotation angle. P is the desired thrust power.
+    //echo("0 3\n"); // R P. R is the desired rotation angle. P is the desired thrust power.
 }
 ?>
