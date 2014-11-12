@@ -112,7 +112,8 @@ function turnI(&$HEAD, $MAP, &$Y, &$X, &$REZ)
     }
 }
 
-function headModificator(&$HEAD, $P) {
+function headModificator(&$HEAD, $P)
+{
     if( in_array($P, array('S','E','N','W')) ) {
         $HEAD = $P;
     }
@@ -134,6 +135,7 @@ function breaker($H, &$MAP, $Y, $X)
         error_log(var_export("\n".implode("\n",$MAP), true));
     }
 }
+
 
 
 fscanf(STDIN, "%d %d",
@@ -219,8 +221,6 @@ while($MAP[$BenderY][$BenderX] != '$') {
     } else {
         turn($HEAD, $MAP, $BenderY, $BenderX, $REZ);
     }
-    
-    continue;
 }
 
 echo $REZ; 
