@@ -1,6 +1,25 @@
 <?php
 
-function turn(&$HEAD, $MAP, &$Y, &$X, &$REZ)
+function turnhead($HEAD, $ELEM, $INV = 0)
+{
+    if($HEAD == 'E') {
+        if ( !in_array($ELEM, array('X', '#')) ) {
+            $HEAD = $INV ? 'N' : 'S';
+        } else {
+            $HEAD = $INV ? 'S' : 'N';
+        }
+    } elseif($HEAD == 'N') {
+        if ( !in_array($ELEM, array('X', '#')) ) {
+            $HEAD = $INV ? 'W' : 'E';
+        } else {
+            $HEAD = $INV ? 'E' : 'W';
+        }
+    }
+    
+    return $HEAD;
+}
+
+function go(&$HEAD, $MAP, &$Y, &$X, &$REZ)
 {
     if($HEAD == 'S') {
         if( !in_array($MAP[$Y+1][$X], array('X', '#')) ) {
@@ -10,7 +29,7 @@ function turn(&$HEAD, $MAP, &$Y, &$X, &$REZ)
             
         } else {
             $HEAD = 'E';
-            turn($HEAD, $MAP, $Y, $X, $REZ);
+            go($HEAD, $MAP, $Y, $X, $REZ);
         }
     }
     elseif($HEAD == 'E') {
@@ -20,12 +39,8 @@ function turn(&$HEAD, $MAP, &$Y, &$X, &$REZ)
             $REZ .= 'EAST'."\n";
             
         } else {
-            if( !in_array($MAP[$Y+1][$X], array('X', '#')) ) {
-                $HEAD = 'S';
-            } else {
-                $HEAD = 'N';
-            }
-            turn($HEAD, $MAP, $Y, $X, $REZ);
+            $HEAD = turnhead($HEAD, $MAP[$Y+1][$X]);
+            go($HEAD, $MAP, $Y, $X, $REZ);
         }
     }
     elseif($HEAD == 'N') {
@@ -34,14 +49,10 @@ function turn(&$HEAD, $MAP, &$Y, &$X, &$REZ)
             
             $REZ .= 'NORTH'."\n";
             
-        } else {
-            if( !in_array($MAP[$Y][$X+1], array('X', '#')) ) {
-                $HEAD = 'E';
-            } else {
-                $HEAD = 'W';
-            }
-            turn($HEAD, $MAP, $Y, $X, $REZ);
-        }
+        }/* else {
+            $HEAD = turnhead($HEAD, $MAP[$Y][$X+1]);
+            go($HEAD, $MAP, $Y, $X, $REZ);
+        }*/
     }
     elseif($HEAD == 'W') {
         if( !in_array($MAP[$Y][$X-1], array('X', '#')) ) {
@@ -51,12 +62,12 @@ function turn(&$HEAD, $MAP, &$Y, &$X, &$REZ)
             
         } else {
             $HEAD = 'S';
-            turn($HEAD, $MAP, $Y, $X, $REZ);
+            go($HEAD, $MAP, $Y, $X, $REZ);
         }
     }
 }
 
-function turnI(&$HEAD, $MAP, &$Y, &$X, &$REZ)
+function goI(&$HEAD, $MAP, &$Y, &$X, &$REZ)
 {
     if($HEAD == 'W') {
         if( !in_array($MAP[$Y][$X-1], array('X', '#')) ) {
@@ -66,7 +77,7 @@ function turnI(&$HEAD, $MAP, &$Y, &$X, &$REZ)
             
         } else {
             $HEAD = 'N';
-            turnI($HEAD, $MAP, $Y, $X, $REZ);
+            goI($HEAD, $MAP, $Y, $X, $REZ);
         }
     }
     elseif($HEAD == 'N') {
@@ -76,12 +87,8 @@ function turnI(&$HEAD, $MAP, &$Y, &$X, &$REZ)
             $REZ .= 'NORTH'."\n";
             
         } else {
-            if( !in_array($MAP[$Y][$X-1], array('X', '#')) ) {
-                $HEAD = 'W';
-            } else {
-                $HEAD = 'E';
-            }
-            turnI($HEAD, $MAP, $Y, $X, $REZ);
+            $HEAD = turnhead($HEAD, $MAP[$Y][$X-1], 1);
+            goI($HEAD, $MAP, $Y, $X, $REZ);
         }
     }
     elseif($HEAD == 'E') {
@@ -90,14 +97,10 @@ function turnI(&$HEAD, $MAP, &$Y, &$X, &$REZ)
             
             $REZ .= 'EAST'."\n";
             
-        } else {
-            if( !in_array($MAP[$Y-1][$X], array('X', '#')) ) {
-                $HEAD = 'N';
-            }else {
-                $HEAD = 'S';
-            }
-            turnI($HEAD, $MAP, $Y, $X, $REZ);
-        }
+        }/*  else {  what is happen ?? )))))
+            $HEAD = turnhead($HEAD, $MAP[$Y-1][$X], 1);
+            goI($HEAD, $MAP, $Y, $X, $REZ);
+        } */
     }
     elseif($HEAD == 'S') {
         if( !in_array($MAP[$Y+1][$X], array('X', '#')) ) {
@@ -107,7 +110,7 @@ function turnI(&$HEAD, $MAP, &$Y, &$X, &$REZ)
             
         } else {
             $HEAD = 'W';
-            turnI($HEAD, $MAP, $Y, $X, $REZ);
+            goI($HEAD, $MAP, $Y, $X, $REZ);
         }
     }
 }
@@ -122,9 +125,9 @@ function headModificator(&$HEAD, $P)
 function breaker($H, &$MAP, $Y, $X)
 {
     $MOD['S'] = array('y' => $Y+1, 'x' => $X);
-    $MOD['E'] = array('y' => $Y, 'x' => $X+1);
+    $MOD['E'] = array('y' => $Y,   'x' => $X+1);
     $MOD['N'] = array('y' => $Y-1, 'x' => $X);
-    $MOD['W'] = array('y' => $Y, 'x' => $X-1);
+    $MOD['W'] = array('y' => $Y,   'x' => $X-1);
     
     $Y = $MOD[$H]['y'];
     $X = $MOD[$H]['x'];
@@ -217,9 +220,9 @@ while($MAP[$BenderY][$BenderX] != '$') {
     }
     
     if($INVERT) {
-        turnI($HEAD, $MAP, $BenderY, $BenderX, $REZ);
+        goI($HEAD, $MAP, $BenderY, $BenderX, $REZ);
     } else {
-        turn($HEAD, $MAP, $BenderY, $BenderX, $REZ);
+        go($HEAD, $MAP, $BenderY, $BenderX, $REZ);
     }
 }
 
