@@ -22,9 +22,7 @@ $count = count($horses);
 $D = $horses[$count-1]; //max
 
 for ($i=0; $i<$count-1; $i++) {
-    $D_temp = $horses[$i] - $horses[$i+1];
-    
-    if($D_temp < 0) $D_temp = -$D_temp;
+    $D_temp = abs($horses[$i] - $horses[$i+1]);
     
     if($D > $D_temp) $D = $D_temp;
 }
@@ -33,4 +31,3 @@ for ($i=0; $i<$count-1; $i++) {
 // To debug (equivalent to var_dump): error_log(var_export($var, true));
 
 echo($D."\n");
-?>
