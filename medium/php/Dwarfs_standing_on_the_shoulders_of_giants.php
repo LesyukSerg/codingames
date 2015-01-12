@@ -1,46 +1,7 @@
 <?php
-
-function subtree0(&$SUBTREE, $node, &$R)
-{ //search in tree node1 and insert node2
-    if (count($SUBTREE)) {
-        foreach ($SUBTREE as $K => $N) {
-            subtree0($SUBTREE[$K], $node, $R);
-
-            if ($K == $node[0]) {
-                $SUBTREE[$K][$node[1]] = array();
-                $R = 1;
-            }
-        }
-    }
-}
-
-function subtree1(&$Item, &$SUBTREE, $node)
-{ //search in tree node2 and insert node1 from tree
-    if (count($SUBTREE)) {
-        foreach ($SUBTREE as $K => $N) {
-
-            if ($K == $node[1]) {
-                $Item = $N;
-            }
-
-            subtree1($Item, $SUBTREE[$K], $node);
-        }
-    }
-}
-
-function countSub(&$SUBTREE, $cnt, &$REZ)
-{ //calculate max inheriting
-    if (count($SUBTREE)) {
-        $cnt++;
-        foreach ($SUBTREE as $N) {
-            countSub($N, $cnt, $REZ);
-        }
-    } else {
-        $REZ[] = $cnt;
-    }
-}
-
 // Read inputs from STDIN. Print outputs to STDOUT.
+fscanf(STDIN, "%d", $n);
+
 for ($i = 0; $i < $n; $i++) {
     //echo "Hello World!\n";
     fscanf(STDIN, "%s %s",
@@ -48,22 +9,82 @@ for ($i = 0; $i < $n; $i++) {
         $node2
     );
 
-    error_log(var_export($node1 . ' ' . $node2, true));
-    $node = array($node1, $node2);
-
-    $R = false;
-    subtree0($TREE, $node, $R);
-
-    if (!$R) {
-        $TREE[$node[0]][$node[1]] = array();
+    if(!isset($TREE[$node1])) {
+        $TREE[$node1] = array(
+            'cost' => 1,
+            'nodes' => array($node2),
+            'total' => 0
+        );
+    } else {
+        $TREE[$node1]['nodes'][] = $node2;
     }
-
-    subtree1($TREE[$node[0]][$node[1]], $TREE, $node);
+    
+    if(!isset($TREE[$node2])) {
+        $TREE[$node2] = array(
+            'cost' => 1,
+            'nodes' => array(),
+            'total' => 0
+        );
+    }
 }
 
-$ARR_REZ = array();
+echo gextri($TREE)+1;
+echo "\n";
 
-foreach ($TREE as $NODE) {
-    countSub($NODE, 1, $ARR_REZ);
+
+# ====================================================================
+function gextri($TREE)
+{   
+    $i = startkeynode($TREE);
+    
+    recursewalk($TREE, $i);
+
+    return searchMax($TREE);
 }
-echo max($ARR_REZ) . "\n";
+
+function startkeynode($TREE) # search start node
+{
+    $k = key($TREE);
+    $flag = 1;
+    while($flag) {
+        $flag = 0;
+        foreach($TREE as $i => $T) {
+            if(in_array($k, $T['nodes'])) {
+                $flag = 1;
+                $k = $i;
+            }
+        }
+    }
+    return $k;
+}
+
+function recursewalk(&$TREE, $i)
+{
+    foreach($TREE[$i]['nodes'] as $k=>$r) {
+        $TREE[$r]['total'] = calcCost($TREE, $i, $k);
+        
+        recursewalk($TREE, $r);
+    }
+}
+
+function calcCost($TREE, $i, $N) # calculate cost for node N
+{
+    $r = $TREE[$i]['nodes'][$N];
+    $sum = $TREE[$i]['total'] + $TREE[$r]['cost'];
+        
+    if($TREE[$r]['total'] < $sum)
+        return $sum;
+
+    return $TREE[$r]['total'];
+}
+
+function searchMax($ROOMS)
+{
+    $REZ = array();
+
+    foreach($ROOMS as $R) {
+        $REZ[] = $R['total'];
+    }
+    
+    return max($REZ);
+}
