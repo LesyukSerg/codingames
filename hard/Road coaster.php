@@ -1,75 +1,54 @@
 <?php
+    $INDEXES = $GROUPS = [];
 
-fscanf(STDIN, "%d %d %d",
-    $L,
-    $C,
-    $N
-);
-
-
-$GROUPS = array();
-$SUM = array();
-$s = 0;
-$SUM[$s] = 0;
-for ($i = 0; $i < $N; $i++) {
-    fscanf(STDIN, "%d",
-        $Pi
+    fscanf(STDIN, "%d %d %d",
+        $L, # limited number of places.
+        $C, # number of times per day.
+        $N  # number of groups.
     );
-    $GROUPS[] = $Pi;
-    //error_log(var_export($SUM, true));
-    error_log(var_export($Pi, true));
-    
-    if($SUM[$s]+$Pi <= $L){
-        $SUM[$s] +=$Pi;
-    } else {
-        if(count($SUM)+1 > $C) break;
-        
-        $SUM[++$s] = $Pi;
+    //error_log(var_export('L='.$L.'C='.$C.'N='.$N, true));
+    for ($i = 0; $i < $N; $i++) {
+        fscanf(STDIN, "%d", $GROUPS[]);
+        $INDEXES[$i] = $i + 1;
     }
-}
+    $INDEXES[$i - 1] = 0;
+    $INDEXES[$i] = 0;
+
+    echo calculate($GROUPS, $C, $L, $INDEXES) . "\n";
 
 
 
 
-//error_log(var_export($SUM, true));
-$i = 0;
-$P = $GROUPS[$i];
-while($s > 0 && $P && $SUM[$s]+$P <= $L){
-    $SUM[$s] += $P;
-    $i++;
-}
-if(empty($GROUPS[$i])) $i = 0;
-$scnt = count($SUM);
-//error_log(var_export($scnt, true));
-//error_log(var_export($C, true));
+    function calculate(&$GROUPS, $C, $L, &$INDEXES)
+    {
+        $STOP = $indexG = 0;
+        //$LAST = count($GROUPS)-1;
+        $CACHE = [];
+        $REZ['sum'] = 0;
 
-$REZ = 0;
-if($scnt < $C){
-    for($c = $C-$scnt; $c>0; $c--) {
-        $total = 0;
-        $P = $GROUPS[$i];
-        $start_i = $i;
-        
-        while($P && $total+$P <= $L) {
-            $total += $P;
-            
-            $i++;
-            
-            if($i >= $N) $i = 0;
-            $P = $GROUPS[$i];
-            
-            if($start_i == $i) break;
+        for ($c = $C; $c > 0; $c--) {
+            $REZ[0] = $GROUPS[$indexG];
+            $indexG = $INDEXES[$indexG];
+            $NEXT = $REZ[0] + $GROUPS[$indexG];
+            $start = $indexG;
+
+            if (isset($CACHE[$start])) {
+                $indexG = $CACHE[$start]['ind'];
+                $REZ[0] = $CACHE[$start]['sum'];
+            } else {
+
+                while ($indexG != $STOP && $NEXT <= $L) {
+                    $REZ[0] = $NEXT;
+                    $indexG = $INDEXES[$indexG];
+                    $NEXT = $REZ[0] + $GROUPS[$indexG];
+                }
+                $CACHE[$start]['sum'] = $REZ[0];
+                $CACHE[$start]['ind'] = $indexG;
+            }
+
+            $STOP = $indexG;
+            $REZ['sum'] += $REZ[0];
         }
-        $REZ += $total;
+
+        return $REZ['sum'];
     }
-}
-error_log(var_export(array_sum($SUM), true));
-$REZ += array_sum($SUM);
-
-error_log(var_export($L, true));
-//error_log(var_export($GROUPS, true));
-
-// Write an action using echo(). DON'T FORGET THE TRAILING \n
-// To debug (equivalent to var_dump): error_log(var_export($var, true));
-
-echo($REZ."\n");
