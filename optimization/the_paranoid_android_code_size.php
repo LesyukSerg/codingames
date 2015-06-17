@@ -1,1 +1,15 @@
-<?fscanf(STDIN,"%d %d %d %d %d %d %d %d",$nF,$w,$nR,$xF,$xP,$nC,$a,$n);$E=[];for($i=0;$i<$n;$i++){fscanf(STDIN,"%d %d",$eF,$eP);$E[$eF]=$eP;}$E[$xF]=$xP;$fF='';while(1){fscanf(STDIN,"%d %d %s",$cF,$cP,$d);if(($E[$cF]<$cP&&$d=='RIGHT')||($E[$cF]>$cP&&$d=='LEFT'))echo($fF!==$cF)?"BLOCK\n":"WAIT\n";else echo"WAIT\n";}
+<?fscanf(STDIN, "%d %d %d %d %d %d %d %d",$z,$y,$x,$F,$P,$w,$a,$n);
+    $E=[];
+    for($i=0;$i<$n;$i++) {
+        fscanf(STDIN, "%d %d", $eF, $eP);
+        $E[$eF] = $eP;
+    }
+    $E[$F] = $P;
+    $F = '';
+    while (1) {
+        fscanf(STDIN, "%d %d %s", $C, $P, $d);
+        if (($E[$C] < $P && $d == 'RIGHT') || ($E[$C] > $P && $d == 'LEFT'))
+            echo ($F !== $C) ? "BLOCK" : "WAIT";
+        else echo "WAIT";
+        echo "\n";
+    }
