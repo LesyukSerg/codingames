@@ -1,4 +1,5 @@
 <?
+    //define(STDIN, fopen('input.txt','r'));
     fscanf(STDIN, "%d", $n);  // $n the number of adjacency relations
 
     for ($i = 0; $i < $n; $i++) {
@@ -20,23 +21,32 @@
 
         if (!isset($TREE[$node2])) {
             $TREE[$node2] = array(
-                'parent' => $node1,
-                'nodes'  => [],
+                'parent' => array($node1),
+                'nodes'  => array(),
                 'total'  => 0,
                 'flag'   => 0
             );
         } else {
-            $TREE[$node2]['parent'] = $node1;
+            if (!is_array($TREE[$node2]['parent'])) {
+                $TREE[$node2]['parent'] = array($node1);
+
+            } elseif (!in_array($node1, $TREE[$node2]['parent'])) {
+                $TREE[$node2]['parent'][] = $node1;
+            }
         }
     }
 
-    // Write an action using echo(). DON'T FORGET THE TRAILING \n
-    // To debug (equivalent to var_dump): error_log(var_export($var, true));
-    $cost = [];
-    foreach ($TREE as $N => $V) {
-        $cost[] = gextri_mod($TREE, $N);
-    }
-    echo min($cost) . "\n";
+    $cost = array();
+    error_log(var_export('el = ' . count($TREE), true));
+    //error_log(var_export($TREE, true));
+    // die();
+    $NEED = [];
+
+
+    $one = gextri_mod($TREE, key($TREE));
+    $two = gextri_mod($TREE, $one['node']);
+
+    echo ceil($two['cost'] / 2) . "\n";
 
     //echo("1\n"); // The minimal amount of steps required to completely propagate the advertisement
     # =============================================================================================
@@ -47,7 +57,6 @@
     {
         recursewalk($TREE, $START);
 
-        //error_log(var_export($TREE, true)); die;
         return searchMax($TREE);
     }
 
@@ -61,10 +70,17 @@
 
             if ($TREE[$i]['parent'] !== 'N') { //UP
                 //error_log(var_export('UP', true));
-                $r = $TREE[$i]['parent'];
+                foreach ($TREE[$i]['parent'] as $r) {  //DOWN
+                    //error_log(var_export('DOWN', true));
+                    if (!$TREE[$r]['flag']) {
+                        $TREE[$r]['total'] = calcCost($TREE[$i]['total'], $TREE[$r]['total']);
+
+                        recursewalk($TREE, $r);
+                    }
+                }
 
                 if (!$TREE[$r]['flag']) {
-                    $TREE[$r]['total'] = calcCost($TREE, $i, $r);
+                    $TREE[$r]['total'] = calcCost($TREE[$i]['total'], $TREE[$r]['total']);
 
                     recursewalk($TREE, $r);
                 }
@@ -73,7 +89,7 @@
             foreach ($TREE[$i]['nodes'] as $k => $r) {  //DOWN
                 //error_log(var_export('DOWN', true));
                 if (!$TREE[$r]['flag']) {
-                    $TREE[$r]['total'] = calcCost($TREE, $i, $r);
+                    $TREE[$r]['total'] = calcCost($TREE[$i]['total'], $TREE[$r]['total']);
 
                     recursewalk($TREE, $r);
                 }
@@ -81,25 +97,27 @@
         }
     }
 
-    function calcCost($TREE, $i, $r) # calculate cost for node N
+    function calcCost($total_i, $total_r) # calculate cost for node N
     {
-        $sum = $TREE[$i]['total'] + 1;
+        $sum = $total_i + 1;
 
-        if ($TREE[$r]['total'] < $sum) {
+        if ($total_r < $sum) {
             return $sum;
         }
 
-
-        return $TREE[$r]['total'];
+        return $total_r;
     }
 
-    function searchMax($TREE)
+    function searchMax(&$TREE)
     {
-        $REZ = [];
+        $REZ = array();
 
-        foreach ($TREE as $t) {
-            $REZ[] = $t['total'];
+        foreach ($TREE as $k => $t) {
+            $REZ[$k] = $t['total'];
         }
 
-        return max($REZ);
+        $max = max($REZ);
+        $node = array_search($max, $REZ);
+
+        return array('node' => $node, 'cost' => $max);
     }
