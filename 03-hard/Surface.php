@@ -1,6 +1,6 @@
 <?php
-
     //define('STDIN', fopen('input.txt', 'r'));
+
 
     class map
     {
@@ -8,10 +8,13 @@
         public $lakes = [];
         public $positions = [];
         public $N;
+        public $timestart;
 
 
         public function __construct()
         {
+            $this->timestart = microtime(1);
+
             fscanf(STDIN, "%d", $L); //Length of field
             fscanf(STDIN, "%d", $H); //Height of field
 
@@ -20,6 +23,11 @@
             }
 
             fscanf(STDIN, "%d", $this->N); // Number of coordinates to check
+        }
+
+        public function getTime($text)
+        {
+            return $text . ' = ' . round(microtime(1) - $this->timestart, 8) . "<br>";
         }
 
         public function analizePoint($Y, $X)
@@ -33,7 +41,9 @@
                 if ($this->FIELD[$Y][$X] == 'O') {
                     $lake = [];
                     $this->positions[0] = array($Y, $X);
+                    //echo ' - calculateLakeSize2 start' . round(microtime(1) - $this->timestart, 4) . "<br>";
                     $total = $this->calculateLakeSize2($lake);
+                    //echo $this->getTime(' - calculateLakeSize2 end');
 
                     $this->lakes += $lake;
                     unset($lake);
@@ -49,6 +59,7 @@
         {
             $total = 0;
 
+            //echo $this->getTime(' --- inWhile start');
             while (($pos = array_shift($this->positions)) !== NULL) {
                 $Y = $pos[0];
                 $X = $pos[1];
@@ -57,89 +68,44 @@
                     $lake[$Y . '_' . $X] = $this->FIELD[$Y][$X] = '+';
                     $total++;
 
-                } elseif ($this->FIELD[$Y][$X] === '+') {
-                    continue;
-
                 } else {
-                    return $total;
+                    continue;
                 }
                 //error_log(var_export($total, true));
 
-                if ($this->isLake($Y - 1, $X)) { // UP
-                    $this->positions[] = array($Y - 1, $X);
-                }
+                //echo $this->getTime(' ----- check next point start');
 
-                if ($this->isLake($Y + 1, $X)) { // DOWN
-                    $this->positions[] = array($Y + 1, $X);
-                }
+                $this->addIfLake($Y - 1, $X); // UP
+                $this->addIfLake($Y + 1, $X); // DOWN
+                $this->addIfLake($Y, $X - 1); // LEFT
+                $this->addIfLake($Y, $X + 1); // RIGHT
 
-                if ($this->isLake($Y, $X - 1)) { // LEFT
-                    $this->positions[] = array($Y, $X - 1);
-                }
-
-                if ($this->isLake($Y, $X + 1)) { //RIGHT
-                    $this->positions[] = array($Y, $X + 1);
-                }
+                //echo $this->getTime(' ----- check point end');
+                //echo "-----------------------<br>";
+                //echo "-----------------------<br>";
             }
+            //echo $this->getTime(' --- inWhile end');
 
+            //echo $this->getTime(' --- Fieled lake start');
             foreach ($lake as $yx => $l) {
                 $lake[$yx] = $total;
             }
 
+            //echo $this->getTime(' --- Fieled lake end');
+
             return $total;
         }
 
-        function isLake($Y, $X)
+        function addIfLake($Y, $X)
         {
             if (isset($this->FIELD[$Y][$X])) {
                 if ($this->FIELD[$Y][$X] == 'O') {
-                    return true;
+                    if (!isset($this->positions[$Y . '_' . $X])) {
+                        $this->positions[$Y . '_' . $X] = array($Y, $X);
+                    }
                 }
             }
-
-            return false;
         }
-
-        function preCalculateLakeSize($FIELD, $Y, $X)
-        {
-            $size = 0;
-            calculateLakeSize($FIELD, $Y, $X, $size);
-
-            return $size;
-        }
-
-        function calculateLakeSize(&$FIELD, $Y, $X, &$total)
-        {
-            if ($FIELD[$Y][$X] == 'O') {
-                $total++;
-                $FIELD[$Y][$X] = '0';
-            } else {
-                return 0;
-            }
-
-            if (isset($FIELD[$Y - 1][$X]) && $FIELD[$Y - 1][$X] == 'O') { // UP
-                //error_log(var_export("GO UP ".($Y - 1) . "_" . $X, true));
-                calculateLakeSize($FIELD, $Y - 1, $X, $total);
-            }
-
-            if (isset($FIELD[$Y + 1][$X]) && $FIELD[$Y + 1][$X] == 'O') { // DOWN
-                //error_log(var_export("GO DOWN ".($Y + 1) . "_" . $X, true));
-                calculateLakeSize($FIELD, $Y + 1, $X, $total);
-            }
-
-            if (isset($FIELD[$Y][$X - 1]) && $FIELD[$Y][$X - 1] == 'O') { // LEFT
-                //error_log(var_export("GO LEFT ".$Y . "_" . ($X - 1), true));
-                calculateLakeSize($FIELD, $Y, $X - 1, $total);
-            }
-
-            if (isset($FIELD[$Y][$X + 1]) && $FIELD[$Y][$X + 1] == 'O') { //RIGHT
-                //error_log(var_export("GO RIGHT ".$Y . "_" . ($X + 1), true));
-                calculateLakeSize($FIELD, $Y, $X + 1, $total);
-            }
-
-            return 0;
-        }
-
     }
 
     $X = $Y = 0;
