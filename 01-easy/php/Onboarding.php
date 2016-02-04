@@ -13,23 +13,18 @@
 
     // game loop
     while (true) {
-        $ENEMYS = array();
-        fscanf(STDIN, "%d",
-            $count // The number of current enemy ships within range
-        );
+        $enemies = array();
 
-        for ($i = 0; $i < $count; $i++) {
-            fscanf(STDIN, "%s %d",
-                $enemy, // The name of this enemy
-                $dist // The distance to your cannon of this enemy
-            );
+        for ($i = 0; $i < 2; $i++) {
+            fscanf(STDIN, "%s", $enemy);
+            fscanf(STDIN, "%d", $dist);
 
-            $ENEMYS[$dist] = $enemy;
+            $enemies[$dist] = $enemy;
         }
 
-        ksort($ENEMYS);
+        ksort($enemies);
         // Write an action using echo(). DON'T FORGET THE TRAILING \n
         // To debug (equivalent to var_dump): error_log(var_export($var, true));
 
-        echo current($ENEMYS) . "\n"; // The name of the most threatening enemy (HotDroid is just one example)
+        echo current($enemies) . "\n"; // The name of the most threatening enemy (HotDroid is just one example)
     }
