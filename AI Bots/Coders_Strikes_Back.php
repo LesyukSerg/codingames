@@ -69,7 +69,7 @@
                 }
             }
 
-            error_log(var_export($this->podsLap, true));
+            //error_log(var_export($this->podsLap, true));
 
             if ($this->podsLap['lap'][0] == $this->podsLap['lap'][1]) {
                 $pod = $this->myPods[0];
@@ -108,10 +108,16 @@
 
             if ($distance > 100) {
                 $speed = $this->get_speed($pod);
+                $angle = ceil($this->angleBetweenVectors($pod, $this->nextPoint));
 
-                return $this->nextPoint['x'] . ' ' . $this->nextPoint['y'] . ' ' . $speed . "\n";
+                if($pod['vx'] && $pod['vy'] && $angle > 10) {
+                    $new = $this->mirrorVektor($pod, $this->nextPoint);
+                    //error_log(var_export($new, true));
+                    return $new['x'] . ' ' . $new['y'] . " $speed\n";
+                } else {
+                    return $this->nextPoint['x'] . ' ' . $this->nextPoint['y'] . " 200\n";
+                }
             } else {
-                error_log(var_export($distance, true));
 
                 return $this->nextPoint['x'] . ' ' . $this->nextPoint['y'] . " 200\n";
             }
@@ -157,15 +163,13 @@
             error_log(var_export('angle - ' . $angle, true));
             error_log(var_export('distance - ' . $distance, true));
 
-            if ($this->startFlag && $pod['nextID'] == 1 && $distance > 2000) {
+            if ($this->startFlag && $distance > 4000) {
                 $speed = 200;
             } else {
                 $this->startFlag = 0;
 
-                if (!$angle) $angle = 1;
-
-                if ($angle < 30) {
-                    $speed = ceil($distance / 30);
+                if ($angle < 30 || ($pod['vx'] < 100 && $pod['vy'] < 100)) {
+                    $speed = ceil($distance / 20);
 
                     if ($speed > 200) {
                         $speed = 200;
@@ -193,7 +197,6 @@
             error_log(var_export('angle - ' . $angle, true));
             error_log(var_export('distance - ' . $distance, true));
 
-            if (!$angle) $angle = 1;
 
             if ($angle < 60) {
                 $speed = 200;
@@ -205,7 +208,6 @@
             return $speed;
         }
 
-
         public function get_distance($pod, $point)
         {
             $d = sqrt(pow($pod['x'] - $point['x'], 2) + pow($pod['y'] - $point['y'], 2));
@@ -215,7 +217,7 @@
 
         public function angleBetweenVectors($pod, $point)
         {
-            $B = [];
+            $B = []; // vektor from pod to point
             $B['x'] = $point['x'] - $pod['x'];
             $B['y'] = $point['y'] - $pod['y'];
 
@@ -225,7 +227,26 @@
 
             $modA = (!$modA) ? 1 : $modA;
             $modB = (!$modB) ? 1 : $modB;
+            $angle = rad2deg(acos($ab / ($modA * $modB)));
 
-            return rad2deg(acos($ab / ($modA * $modB)));
+            if (!$angle) $angle = 1;
+
+            return $angle;
+        }
+
+        public function mirrorVektor($pod, $point)
+        {
+            $B = []; // vektor from pod to point
+            $B['x'] = $point['x'] - $pod['x'];
+            $B['y'] = $point['y'] - $pod['y'];
+
+            $mirror = []; // mirror vektor from pod to point
+            $mirror['x'] = 2*$pod['vx'] - $B['x'];
+            $mirror['y'] = 2*$pod['vy'] - $B['y'];
+
+            $new['x'] = $pod['x'] - $mirror['x'];
+            $new['y'] = $pod['y'] - $mirror['y'];
+
+            return $new;
         }
     }
