@@ -17,13 +17,14 @@
         public $nextPoint;
         public $myPods;
         public $enemyPods;
-        public $waitForIt;
         public $startFlag;
         public $podsLap;
+        public $ePodsLap;
 
         public function __construct()
         {
             $this->podsLap = array('lap' => array(0, 0), 'point' => array(0, 0));
+            $this->ePodsLap = array('lap' => array(0, 0), 'point' => array(0, 0));
             $this->startFlag = 1;
             $this->waitForIt = 5;
             $checkpointX = $checkpointY = 0;
@@ -69,6 +70,16 @@
                 }
             }
 
+            for ($i = 0; $i < 2; $i++) {
+                if ($this->ePodsLap['point'][$i] != $this->enemyPods[$i]['nextID']) {
+                    if ($this->ePodsLap['point'][$i] > $this->enemyPods[$i]['nextID']) {
+                        $this->ePodsLap['lap'][$i]++;
+                    }
+
+                    $this->ePodsLap['point'][$i] = $this->enemyPods[$i]['nextID'];
+                }
+            }
+            //error_log(var_export($this->ePodsLap, true));
             //error_log(var_export($this->podsLap, true));
 
             if ($this->podsLap['lap'][0] == $this->podsLap['lap'][1]) {
@@ -110,8 +121,9 @@
                 $speed = $this->get_speed($pod);
                 $angle = ceil($this->angleBetweenVectors($pod, $this->nextPoint));
 
-                if($pod['vx'] && $pod['vy'] && $angle > 10) {
+                if ($pod['vx'] && $pod['vy'] && $angle > 1) {
                     $new = $this->mirrorVektor($pod, $this->nextPoint);
+
                     //error_log(var_export($new, true));
                     return $new['x'] . ' ' . $new['y'] . " $speed\n";
                 } else {
@@ -125,34 +137,39 @@
 
         public function taran($taran)
         {
-            if ($this->waitForIt > 0) {
-                $this->waitForIt--;
+            $enemy1 = $this->enemyPods[0];
+            $enemy2 = $this->enemyPods[1];
 
-                return $taran['x'] . ' ' . $taran['y'] . " 50\n";
-
-            } else {
-                $enemy1 = $this->enemyPods[0];
-                $enemy2 = $this->enemyPods[1];
-
+            if ($this->podsLap['lap'][0] == $this->podsLap['lap'][1]) {
                 if ($enemy1['nextID'] > $enemy2['nextID']) {
                     $enemy = $enemy1;
                 } else {
                     $enemy = $enemy2;
                 }
 
-                $distance = [];
-                foreach ($this->enemyPods as $ePod) {
-                    $distance[] = $this->get_distance($taran, $ePod);
-                }
-                $distance = min($distance);
+            } elseif ($this->podsLap['lap'][0] > $this->podsLap['lap'][1]) {
+                $enemy = $enemy1;
+            } else {
+                $enemy = $enemy2;
+            }
 
-                if ($distance > 1000) {
-                    $espeed = $this->get_speed_enemy($taran, $enemy);
 
-                    return $enemy['x'] . ' ' . $enemy['y'] . " $espeed\n";
-                } else {
-                    return $enemy['x'] . ' ' . $enemy['y'] . " SHIELD\n";
-                }
+            $distance = [];
+            foreach ($this->enemyPods as $ePod) {
+                $distance[] = $this->get_distance($taran, $ePod);
+            }
+
+            $distance = min($distance);
+            $new = $this->mirrorVektor($taran, $enemy);
+
+            if ($distance > 1000) {
+                $eSpeed = $this->get_speed_enemy($taran, $enemy);
+
+                //$angle = ceil($this->angleBetweenVectors($taran, $enemy));
+
+                return $new['x'] . ' ' . $new['y'] . " $eSpeed\n";
+            } else {
+                return $new['x'] . ' ' . $new['y'] . " SHIELD\n";
             }
         }
 
@@ -160,8 +177,8 @@
         {
             $distance = $this->get_distance($pod, $this->nextPoint);
             $angle = ceil($this->angleBetweenVectors($pod, $this->nextPoint));
-            error_log(var_export('angle - ' . $angle, true));
-            error_log(var_export('distance - ' . $distance, true));
+            //error_log(var_export('angle - ' . $angle, true));
+            //error_log(var_export('distance - ' . $distance, true));
 
             if ($this->startFlag && $distance > 4000) {
                 $speed = 200;
@@ -179,7 +196,7 @@
 
                 } else {
                     if ($distance < 3000) {
-                        $speed = ceil($distance / 50);
+                        $speed = ceil($distance / 30);
                         $speed = ($speed < 20) ? 200 : $speed;
                     } else {
                         $speed = 100;
@@ -194,8 +211,8 @@
         {
             $angle = ceil($this->angleBetweenVectors($pod, $enemy));
             $distance = $this->get_distance($pod, $enemy);
-            error_log(var_export('angle - ' . $angle, true));
-            error_log(var_export('distance - ' . $distance, true));
+            //error_log(var_export('angle - ' . $angle, true));
+            //error_log(var_export('distance - ' . $distance, true));
 
 
             if ($angle < 60) {
@@ -241,8 +258,8 @@
             $B['y'] = $point['y'] - $pod['y'];
 
             $mirror = []; // mirror vektor from pod to point
-            $mirror['x'] = 2*$pod['vx'] - $B['x'];
-            $mirror['y'] = 2*$pod['vy'] - $B['y'];
+            $mirror['x'] = 2 * $pod['vx'] - $B['x'];
+            $mirror['y'] = 2 * $pod['vy'] - $B['y'];
 
             $new['x'] = $pod['x'] - $mirror['x'];
             $new['y'] = $pod['y'] - $mirror['y'];
