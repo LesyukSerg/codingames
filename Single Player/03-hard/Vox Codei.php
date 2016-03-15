@@ -18,7 +18,7 @@
                     if ($fireWall->map[$bomb['y']][$bomb['x']] != '@') {
                         $set[] = $bomb;
                         echo $bomb['x'] . ' ' . $bomb['y'] . "\n";
-                        $wait = 3;
+                        $wait = 2;
                         unset($places[$k]);
                     }
                 }
@@ -61,25 +61,18 @@
         public function round($bombs)
         {
             $this->bombPos = [];
-            $this->search_optimal_position(-1, 0, $this->map, $bombs, $this->countNodes);
+            $this->search_optimal_position($this->map, $bombs, $this->countNodes);
 
             return $this->bombPos;
         }
 
-        public function search_optimal_position($X, $Y, $map, $bombs, $enemyLeft)
+        public function search_optimal_position($map, $bombs, $enemyLeft)
         {
             $ok = 0;
 
-            if ($X < $this->mapWidth - 1) {
-                $X = $X + 1;
-            } else {
-                $X = 0;
-                $Y = $Y + 1;
-            }
-
-            for ($y = $Y; $y < $this->mapHeight; $y++) {
-                for ($x = $X; $x < $this->mapWidth; $x++) {
-                    if ($map[$y][$x] == '@' || $map[$y][$x] == '#') {
+            for ($y = 0; $y < $this->mapHeight; $y++) {
+                for ($x = 0; $x < $this->mapWidth; $x++) {
+                    if ($map[$y][$x] == '@' || $map[$y][$x] == '#' || $map[$y][$x] == 'B') {
                         continue;
                     }
 
@@ -100,7 +93,7 @@
 
                         if ($enemyLeft) {
                             if ($bombs) {
-                                $ok = $this->search_optimal_position($x, $y, $map, $bombs, $enemyLeft);
+                                $ok = $this->search_optimal_position($map, $bombs, $enemyLeft);
                                 if ($ok) return 1;
                             }
 
@@ -115,7 +108,6 @@
                         }
                     }
                 }
-                $X = 0;
             }
 
             return $ok;
