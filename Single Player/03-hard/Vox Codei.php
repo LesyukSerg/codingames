@@ -1,15 +1,17 @@
 <?php
-    define('STDIN', fopen('input.txt', 'r'));
+    //define('STDIN', fopen('input.txt', 'r'));
+    $rounds = $bombs = 0;
+    $wait = 0;
 
     $fireWall = new Firewall;
     fscanf(STDIN, "%d %d",
         $rounds, // number of rounds left before the end of the game
         $bombs // number of bombs left
     );
-    $places = $fireWall->round($bombs);
-    $wait = 0;
-    // game loop
 
+    $places = $fireWall->round($bombs);
+
+    // game loop
     while (true) {
         if (count($places)) {
             if (!$wait) {
@@ -40,10 +42,10 @@
     class Firewall
     {
         public $map;
-        public $mapHeight;
-        public $mapWidth;
-        public $countNodes;
-        public $bombPos;
+        private $mapHeight;
+        private $mapWidth;
+        private $countNodes;
+        protected $bombPos;
 
         public function __construct()
         {
@@ -61,9 +63,57 @@
         public function round($bombs)
         {
             $this->bombPos = [];
-            $this->search_optimal_position($this->map, $bombs, $this->countNodes);
+            $map = $this->map;
+            $enemyLeft = $this->countNodes;
+            $this->search_optimal_position2($map, $bombs, $enemyLeft);
+
+            if ($enemyLeft) {
+                $this->bombPos = [];
+                $this->search_optimal_position($this->map, $bombs, $this->countNodes);
+            }
 
             return $this->bombPos;
+        }
+
+        private function search_optimal_position2(&$map, $bombs, &$enemyLeft)
+        {
+            $possible_positions = [];
+
+            for ($y = $this->mapHeight - 1; $y >= 0; $y--) {
+                for ($x = $this->mapWidth - 1; $x >= 0; $x--) {
+                    if ($map[$y][$x] == '@' || $map[$y][$x] == '#') {
+                        continue;
+                    }
+                    //error_log(var_export($y . ' ' . $x . ' = ' . $map[$y][$x], true));
+
+                    $found = $this->search_bomb($map, $x, $y);
+                    $countB = count($found);
+
+                    foreach ($found as $pos) {
+                        $map[$pos['y']][$pos['x']] = '@';
+                    }
+
+                    $possible_positions[$countB] = array('x' => $x, 'y' => $y);
+                }
+
+            }
+
+            krsort($possible_positions);
+            foreach ($possible_positions as $found => $pos) {
+                $this->bombPos[] = $pos;
+                $enemyLeft -= $found;
+
+                $this->search_bomb($map, $pos['x'], $pos['y']);
+                break;
+            }
+
+            $bombs--;
+
+            if (!$bombs || !$enemyLeft) {
+                return 1;
+            } else {
+                $this->search_optimal_position2($map, $bombs, $enemyLeft);
+            }
         }
 
         public function search_optimal_position($map, $bombs, $enemyLeft)
@@ -76,13 +126,14 @@
                         continue;
                     }
 
-                    $beforeMap = $map;
+                    //$beforeMap = $map;
                     $found = $this->search_bomb($map, $x, $y);
+                    $countB = count($found);
 
-                    if ($found) {
+                    if ($countB) {
                         $this->bombPos[$bombs] = ['x' => $x, 'y' => $y];
                         $map[$y][$x] = 'B';
-                        $enemyLeft -= $found;
+                        $enemyLeft -= $countB;
                         $bombs--;
 
                         //error_log(var_export('=========================', true));
@@ -94,14 +145,18 @@
                         if ($enemyLeft) {
                             if ($bombs) {
                                 $ok = $this->search_optimal_position($map, $bombs, $enemyLeft);
-                                if ($ok) return 1;
                             }
 
                             if (!$ok) {
-                                $map = $beforeMap;
-                                $enemyLeft += $found;
+                                foreach ($found as $pos) {
+                                    $map[$pos['y']][$pos['x']] = '@';
+                                }
+                                $map[$y][$x] = '.';
+                                $enemyLeft += $countB;
                                 $bombs++;
                                 continue;
+                            } else {
+                                return 1;
                             }
                         } else {
                             return 1;
@@ -115,13 +170,14 @@
 
         public function search_bomb(&$tempMap, $x, $y)
         {
-            $found = 0;
+            $found = [];
 
             // check y
             for ($Y = $y + 1; $Y < $y + 4 && $Y < $this->mapHeight; $Y++) {
                 if ($tempMap[$Y][$x] == '@') {
                     $tempMap[$Y][$x] = '+';
-                    $found++;
+                    $found[] = array('x' => $x, 'y' => $Y);
+
                 } elseif ($tempMap[$Y][$x] == '#') {
                     break;
                 }
@@ -130,17 +186,20 @@
             for ($Y = $y - 1; $Y > $y - 4 && $Y >= 0; $Y--) {
                 if ($tempMap[$Y][$x] == '@') {
                     $tempMap[$Y][$x] = '+';
-                    $found++;
+                    $found[] = array('x' => $x, 'y' => $Y);
+
                 } elseif ($tempMap[$Y][$x] == '#') {
                     break;
                 }
             }
 
             // check x
+            //error_log(var_export($y.' ' . $x.' = '. $tempMap[$y][$x], true));
             for ($X = $x + 1; $X < $x + 4 && $X < $this->mapWidth; $X++) {
                 if ($tempMap[$y][$X] == '@') {
                     $tempMap[$y][$X] = '+';
-                    $found++;
+                    $found[] = array('x' => $X, 'y' => $y);
+
                 } elseif ($tempMap[$y][$X] == '#') {
                     break;
                 }
@@ -149,7 +208,8 @@
             for ($X = $x - 1; $X > $x - 4 && $X >= 0; $X--) {
                 if ($tempMap[$y][$X] == '@') {
                     $tempMap[$y][$X] = '+';
-                    $found++;
+                    $found[] = array('x' => $X, 'y' => $y);
+
                 } elseif ($tempMap[$y][$X] == '#') {
                     break;
                 }
