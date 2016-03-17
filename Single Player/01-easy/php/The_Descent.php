@@ -1,21 +1,21 @@
 <?php
+    /**
+     * Auto-generated code below aims at helping you parse
+     * the standard input according to the problem statement.
+     **/
+
     // game loop
-    while (true) {
-        $SX = $SY = 0;
-        $mountain_heights = array();
-        fscanf(STDIN, "%d %d", $SX, $SY);
+    while (1) {
+        $mountains = [];
 
         for ($i = 0; $i < 8; $i++) {
-            fscanf(STDIN, "%d", $MH);
-            $mountain_heights[$i] = $MH;
+            fscanf(STDIN, "%d", $mountainHeight); // represents the height of one mountain, from 9 to 0.
+            $mountains[$mountainHeight] = $i;
         }
-        $max_height = max($mountain_heights);
-        $mountain = array_search($max_height, $mountain_heights);
+        krsort($mountains);
+
         // Write an action using echo(). DON'T FORGET THE TRAILING \n
         // To debug (equivalent to var_dump): error_log(var_export($var, true));
-        if ($SX == $mountain) {
-            echo("FIRE\n"); // either:  FIRE (ship is firing its phase cannons) or HOLD (ship is not firing).
-        } else {
-            echo("HOLD\n");
-        }
+
+        echo current($mountains) . "\n"; // The number of the mountain to fire on.
     }
