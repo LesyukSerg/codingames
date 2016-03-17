@@ -1,4 +1,9 @@
 <?php
+    $message = stream_get_line(STDIN, 100, "\n");
+    // Write an action using echo(). DON'T FORGET THE TRAILING \n
+    // To debug (equivalent to var_dump): error_log(var_export($var, true));
+    echo chuckNorrisCode(convertToBin($message)) . "\n";
+
 
     function convertToBin($text)
     {
@@ -47,11 +52,3 @@
         return substr($out, 0, strlen($out) - 1);
     }
 
-
-    $MESSAGE = stream_get_line(STDIN, 100, "\n");
-
-    // Write an action using echo(). DON'T FORGET THE TRAILING \n
-    // To debug (equivalent to var_dump): error_log(var_export($var, true));
-
-    echo chuckNorrisCode(convertToBin($MESSAGE));
-    echo("\n");

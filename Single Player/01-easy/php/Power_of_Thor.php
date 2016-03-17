@@ -1,5 +1,4 @@
 <?php
-
     fscanf(STDIN, "%d %d %d %d",
         $LX, // the X position of the light of power
         $LY, // the Y position of the light of power
@@ -10,9 +9,7 @@
     $Y = $TY;
     // game loop
     while (true) {
-        fscanf(STDIN, "%d",
-            $E // The level of Thor's remaining energy, representing the number of moves he can still make.
-        );
+        fscanf(STDIN, "%d", $E); // The level of Thor's remaining energy, representing the number of moves he can still make.
 
         if ($Y < $LY) {
             echo 'S';

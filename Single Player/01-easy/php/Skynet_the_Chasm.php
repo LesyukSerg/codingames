@@ -12,12 +12,8 @@
     $before_jump = $R;
     // game loop
     while (true) {
-        fscanf(STDIN, "%d",
-            $S // the motorbike's speed.
-        );
-        fscanf(STDIN, "%d",
-            $X // the position on the road of the motorbike.
-        );
+        fscanf(STDIN, "%d", $S); // the motorbike's speed.
+        fscanf(STDIN, "%d", $X); // the position on the road of the motorbike.
 
         // Write an action using echo(). DON'T FORGET THE TRAILING \n
         // To debug (equivalent to var_dump): error_log(var_export($var, true));

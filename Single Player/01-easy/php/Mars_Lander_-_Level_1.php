@@ -1,5 +1,4 @@
 <?php
-
     fscanf(STDIN, "%d", $N); // the number of points used to draw the surface of Mars.
 
     $coords = array();
@@ -15,17 +14,15 @@
             $X1_landing = $coords[$i - 1]['x'];
             $X2_landing = $coords[$i]['x'];
 
-            error_log(var_export($Y_landing, true));
-            error_log(var_export($X1_landing, true));
-            error_log(var_export($X2_landing, true));
+            //error_log(var_export($Y_landing, true));
+            //error_log(var_export($X1_landing, true));
+            //error_log(var_export($X2_landing, true));
         }
     }
 
-
-    $flag = $i = 0;
+    $flag = 0;
     // game loop
     while (true) {
-        $i++;
         fscanf(STDIN, "%d %d %d %d %d %d %d",
             $X,
             $Y,
@@ -38,7 +35,6 @@
 
         if ($VS < -44)
             $flag++;
-
 
         if ($flag)
             echo("0 4\n");

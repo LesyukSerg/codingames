@@ -8,20 +8,23 @@
     if ($TEMPS) {
         $Temperatures = explode(' ', $TEMPS);
 
-        $minus = -9999;
-        $plus = 9999;
+        $minus = [-9999];
+        $plus = [9999];
         foreach ($Temperatures as $t) {
             if ($t < 0) {
-                if ($minus < $t) $minus = $t;
+                $minus[] = $t;
             } else {
-                if ($plus > $t) $plus = $t;
+                $plus[] = $t;
             }
         }
 
-        if (-$minus < $plus)
-            echo($minus . "\n");
+        $minus = max($minus);
+        $plus = min($plus);
+
+        if (abs($minus) < $plus)
+            echo $minus . "\n";
         else
-            echo($plus . "\n");
+            echo $plus . "\n";
     } else {
-        echo("0\n");
+        echo "0\n";
     }
