@@ -9,11 +9,7 @@
     {
         $out = '';
         for ($i = 0; $i < strlen($text); $i++) {
-            $code = decbin(ord($text[$i]));
-
-            while (strlen($code) < 7) {
-                $code = '0' . $code;
-            }
+            $code = sprintf('%07b', ord($text[$i]));
 
             $out .= $code;
         }
@@ -23,7 +19,7 @@
 
     function chuckNorrisCode($code)
     {
-        $one_zero = array();
+        $one_zero = [];
         $current = '';
         $s = 0;
         for ($i = 0; $i < strlen($code); $i++) {
@@ -49,6 +45,5 @@
             $out .= ' ';
         }
 
-        return substr($out, 0, strlen($out) - 1);
+        return trim($out);
     }
-
