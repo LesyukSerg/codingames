@@ -1,5 +1,4 @@
 <?php
-    //define('STDIN', fopen('input.txt', 'r'));
     $game = new SkynetGame();
 
     // game loop
@@ -8,22 +7,11 @@
         $NODE = false;
         fscanf(STDIN, "%d", $SkyNetPos); // The index of the node on which the Skynet agent is positioned this turn
 
-        // To debug (equivalent to var_dump): error_log(var_export($var, true));
         $link = $game->blockLink($SkyNetPos);
         $game->unsetFromArrays($link[1], $link[2]);
 
         echo $link[1] . " " . $link[2] . "\n";
     }
-
-    /*    fscanf(STDIN, "%d", $lines);
-        for ($i = 0; $i < $lines; $i++) {
-            fscanf(STDIN, "%d %d", $N1, $N2); // N1 and N2 defines a link between these nodes
-            $nodesTree[$N1][$N2] = 0;
-            $nodesTree[$N2][$N1] = 0;
-        }
-
-
-        die();*/
 
     class SkynetGame
     {
@@ -45,8 +33,8 @@
             for ($i = 0; $i < $L; $i++) {
                 fscanf(STDIN, "%d %d", $N1, $N2); // N1 and N2 defines a link between these nodes
                 $this->nodes[$N1 . '_' . $N2] = array(1 => $N1, 2 => $N2);
-                $this->nodesTree[$N1][$N2] = 0;
-                $this->nodesTree[$N2][$N1] = 0;
+                $this->nodesTree[$N1][$N2] = 9;
+                $this->nodesTree[$N2][$N1] = 9;
             }
 
             for ($i = 0; $i < $E; $i++) {
@@ -77,21 +65,14 @@
                 if (!$found) {
                     error_log(var_export('find_TwoNodesOneGate', true));
                     $found = $this->find_TwoNodesOneGate($SP);
+
                     if (!$found) {
-                        error_log(var_export('ooops', true));
-                    } else {
-                        return $found;
+                        error_log(var_export("it's impossible", true));
                     }
-
-                } else {
-                    return $found;
                 }
-
-            } else {
-                return $found;
             }
 
-            return 0;
+            return $found;
         }
 
         function checkClosestNodes($SI)
@@ -111,7 +92,7 @@
         function find_OneNodeTwoGates($SP)
         {
             $nodes = [];
-            $countOfstep = [];
+            $countOfStep = [];
 
             foreach ($this->nodeToGateway as $index => $node) {
                 $cnt = count($node);
@@ -125,21 +106,19 @@
                 arsort($nodes);
 
                 // find closest gate
-                $sherlok = new pathFinder();
+                $sherlok = new pathFinder($this->nodeToGateway, $this->gateway);
                 $rezTree = $this->nodesTree;
                 $sherlok->findPath($rezTree, $SP, 0);
 
                 foreach ($nodes as $node => $count) {
                     foreach ($this->nodeToGateway[$node] as $gate) {
-                        $countOfstep[$node . '_' . $gate] = $rezTree[$node][$gate];
+                        $countOfStep[$node . '_' . $gate] = $rezTree[$node][$gate];
                     }
                 }
 
+                asort($countOfStep);
 
-                asort($countOfstep);
-                error_log(var_export($countOfstep, true));
-
-                $node = array_search(current($countOfstep), $countOfstep);
+                $node = array_search(current($countOfStep), $countOfStep);
                 $node = explode('_', $node);
 
 
@@ -158,16 +137,15 @@
                     $gates[$gate][$index] = $index;
                 }
             }
-            error_log(var_export($gates, true));
 
-            foreach ($gates as $gate => $node) {
-                $nodes[$gate] = count($node);
-            }
+            if (count($gates)) {
+                foreach ($gates as $gate => $node) {
+                    $nodes[$gate] = count($node);
+                }
 
-            arsort($nodes);
-            $index = array_search(current($nodes), $nodes);
+                arsort($nodes);
+                $index = array_search(current($nodes), $nodes);
 
-            if (current($gates[$index])) {
                 return array(1 => $index, 2 => current($gates[$index]));
             }
 
@@ -198,15 +176,23 @@
 
     class pathFinder
     {
+        public $nodeToGates;
+        public $gates;
+
+        public function __construct($nodeToGates, $Gates)
+        {
+            $this->nodeToGates = $nodeToGates;
+            $this->gates = $Gates;
+        }
+
         function findPath(&$MAP, $N, $i)
         {
             $WAVE = $this->oneWave($MAP, $N, ++$i);
 
             while (count($WAVE)) {
-                $i++;
                 $newWave = [];
-                foreach ($WAVE as $next) {
-                    $this->oneWave($MAP, $next, $i, $newWave);
+                foreach ($WAVE as $next => $i) {
+                    $this->oneWave($MAP, $next, ++$i, $newWave);
                 }
                 $WAVE = $newWave;
             }
@@ -214,13 +200,21 @@
 
         function oneWave(&$MAP, $from, $i, &$WAVE = [])
         {
-            //error_log(var_export($Y." ".$maxY, true));
             if (isset($MAP[$from])) {
                 foreach ($MAP[$from] as $to => $v) {
-                    if (!$MAP[$from][$to]) {
-                        $MAP[$from][$to] = $i;
-                        $MAP[$to][$from] = $i;
-                        $WAVE[] = $to;
+                    if ($i < $MAP[$from][$to]) {
+                        if (in_array($to, $this->gates) || isset($this->nodeToGates[$to])) {
+                            $MAP[$from][$to] = $i - 1;
+                            $MAP[$to][$from] = $i - 1;
+
+                            if (!in_array($to, $this->gates)) {
+                                $WAVE[$to] = $i - 1;
+                            }
+
+                        } else {
+                            $MAP[$from][$to] = $i;
+                            $WAVE[$to] = $i;
+                        }
                     }
                 }
             }
