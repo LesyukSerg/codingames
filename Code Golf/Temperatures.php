@@ -1,1 +1,1 @@
-<?fscanf(STDIN,"%d",$N);if($N){$m=-$p=999;while($N-->0){$t=(int)stream_get_line(STDIN,9," ");if($t<0){if($m<$t)$m=$t;}elseif($p>$t)$p=$t;}if(-$m<$p)die("$m\n");else die("$p\n");}die("0\n");
+<?fgets(STDIN);$t=explode(' ',trim(fgets(STDIN)));sort($t);$m=999;foreach($t as $p)$m=abs($p)<=abs($m)?$p:$m;echo $m?$m:0;
