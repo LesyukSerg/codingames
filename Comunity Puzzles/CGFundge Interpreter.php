@@ -4,7 +4,6 @@
 
     for ($i = 0; $i < $N; $i++) {
         $code[] = stream_get_line(STDIN, 31, "\n");
-        //error_log(var_export($line, true));
     }
 
     $go = new Interpreter();
@@ -36,7 +35,7 @@
             } elseif ($symbol == ' ' && !$this->stringMode) {
 
             } else {
-                if (!preg_match("/\d/", $symbol)) {
+                if ($this->stringMode) {
                     $symbol = ord($symbol);
                 }
 
@@ -49,26 +48,26 @@
         public function command($symbol)
         {
             if (in_array($symbol, array('>', '<', '^', 'v'))) {
-                //error_log(var_export('turn', true));
                 $this->turn($symbol);
 
-            } elseif (in_array($symbol, array('+', '-', '*'))) {
-                $firstO = array_pop($this->stack);
-                $secondO = array_pop($this->stack);
-
-                switch ($symbol) { // math '+', '-', '*'
+            } elseif (in_array($symbol, array('+', '-', '*'))) { // math '+', '-', '*'
+                switch ($symbol) {
                     case '+':
-                        $this->stack[] = $firstO + $secondO;
+                        $this->stack[] = array_pop($this->stack) + array_pop($this->stack);
                         break;
+
                     case '-':
-                        $this->stack[] = $secondO - $firstO;
+                        $denied = array_pop($this->stack);
+                        $this->stack[] = array_pop($this->stack) - $denied;
                         break;
+
                     case '*':
-                        $this->stack[] = $firstO * $secondO;
+                        $this->stack[] = array_pop($this->stack) * array_pop($this->stack);
                         break;
                 }
+
             } elseif ($symbol == '"') {
-                $this->stringMode = $this->stringMode ? false : true;
+                $this->stringMode = !$this->stringMode;
 
             } elseif ($symbol == 'I') { //'I' - Pop the top integer from the stack and print it to stdout.
                 echo array_pop($this->stack);
@@ -80,18 +79,14 @@
                 $this->move();
 
             } elseif ($symbol == '|') { //'|' - Pop the top value from the stack. If it is 0, continue down. Otherwise, go up.
-                $s = array_pop($this->stack);
-
-                if ($s == 0) {
+                if (array_pop($this->stack) == 0) {
                     $this->turn('v');
                 } else {
                     $this->turn('^');
                 }
 
             } elseif ($symbol == '_') { //'_' - Pop the top value from the stack. If it is 0, continue to the right. Otherwise, go left.
-                $s = array_pop($this->stack);
-
-                if ($s == "0") {
+                if (array_pop($this->stack) == 0) {
                     $this->turn('>');
                 } else {
                     $this->turn('<');
