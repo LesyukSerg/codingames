@@ -18,17 +18,20 @@
         public $myPods;
         public $enemyPods;
         public $startFlag;
+        public $Boost;
         public $podsLap;
+        public $laps;
         public $ePodsLap;
 
         public function __construct()
         {
             $this->podsLap = array('lap' => array(0, 0), 'point' => array(0, 0));
             $this->ePodsLap = array('lap' => array(0, 0), 'point' => array(0, 0));
+            $this->Boost = 1;
             $this->startFlag = 1;
             $this->waitForIt = 5;
             $checkpointX = $checkpointY = 0;
-            fscanf(STDIN, "%d", $laps);
+            fscanf(STDIN, "%d", $this->laps);
             fscanf(STDIN, "%d", $checkpointCount);
 
             for ($i = 0; $i < $checkpointCount; $i++) {
@@ -85,23 +88,23 @@
             if ($this->podsLap['lap'][0] == $this->podsLap['lap'][1]) {
                 $pod = $this->myPods[0];
                 $this->nextPoint = $this->checkPoints[$pod['nextID']];
-                echo $this->racer($this->myPods[0], $this->myPods[1]);
+                echo $this->racer2($this->myPods[0], $this->myPods[1]);
 
                 $pod = $this->myPods[1];
                 $this->nextPoint = $this->checkPoints[$pod['nextID']];
-                echo $this->racer($this->myPods[1], $this->myPods[0]);
+                echo $this->racer2($this->myPods[1], $this->myPods[0]);
 
             } else {
                 if ($this->podsLap['lap'][0] > $this->podsLap['lap'][1]) {
                     $pod = $this->myPods[0];
                     $this->nextPoint = $this->checkPoints[$pod['nextID']];
-                    echo $this->racer($this->myPods[0], $this->myPods[1]);
+                    echo $this->racer2($this->myPods[0], $this->myPods[1]);
                     echo $this->taran($this->myPods[1]);
                 } else {
                     $pod = $this->myPods[1];
                     $this->nextPoint = $this->checkPoints[$pod['nextID']];
                     echo $this->taran($this->myPods[0]);
-                    echo $this->racer($this->myPods[1], $this->myPods[0]);
+                    echo $this->racer2($this->myPods[1], $this->myPods[0]);
                 }
             }
         }
@@ -127,12 +130,41 @@
                     //error_log(var_export($new, true));
                     return $new['x'] . ' ' . $new['y'] . " $speed\n";
                 } else {
-                    return $this->nextPoint['x'] . ' ' . $this->nextPoint['y'] . " 200\n";
+                    return $this->nextPoint['x'] . ' ' . $this->nextPoint['y'] . " 100\n";
                 }
             } else {
 
-                return $this->nextPoint['x'] . ' ' . $this->nextPoint['y'] . " 200\n";
+                return $this->nextPoint['x'] . ' ' . $this->nextPoint['y'] . " 100\n";
             }
+        }
+
+        public function racer2($pod, $second)
+        {
+            // calc enemy distance
+            /*$distance = [];
+            foreach ($this->enemyPods as $ePod) {
+                $distance[] = $this->get_distance($pod, $ePod);
+            }
+            $distance[] = $this->get_distance($pod, $second);
+            $distance = min($distance);*/
+
+            if ($pod['vx'] && $pod['vy']) {
+                $angle = $this->angleBetweenVectors($pod, $this->nextPoint);
+            } else {
+                $angle = 0;
+            }
+
+            if ($angle > 10) {
+                $go = $this->mirrorVektor($pod, $this->nextPoint);
+                $go['x'] += $pod['x'];
+                $go['y'] += $pod['y'];
+            } else {
+                $go = array('x' => $this->nextPoint['x'], 'y' => $this->nextPoint['y']);
+            }
+
+            $speed = $this->get_speed2($pod, $angle);
+
+            return $go['x'] . ' ' . $go['y'] . " $speed R\n";
         }
 
         public function taran($taran)
@@ -140,37 +172,46 @@
             $enemy1 = $this->enemyPods[0];
             $enemy2 = $this->enemyPods[1];
 
-            if ($this->podsLap['lap'][0] == $this->podsLap['lap'][1]) {
+            if ($this->ePodsLap['lap'][0] == $this->ePodsLap['lap'][1]) {
                 if ($enemy1['nextID'] > $enemy2['nextID']) {
-                    $enemy = $enemy1;
+                    $closestEnemy = $enemy1;
                 } else {
-                    $enemy = $enemy2;
+                    $closestEnemy = $enemy2;
                 }
 
-            } elseif ($this->podsLap['lap'][0] > $this->podsLap['lap'][1]) {
-                $enemy = $enemy1;
+            } elseif ($this->ePodsLap['lap'][0] > $this->ePodsLap['lap'][1]) {
+                $closestEnemy = $enemy1;
             } else {
-                $enemy = $enemy2;
+                $closestEnemy = $enemy2;
             }
 
 
-            $distance = [];
+            /*$distance = [];
             foreach ($this->enemyPods as $ePod) {
                 $distance[] = $this->get_distance($taran, $ePod);
             }
 
-            $distance = min($distance);
-            $new = $this->mirrorVektor($taran, $enemy);
+            $minDist = min($distance);
+            $k = array_search($minDist, $distance);
+            $closestEnemy = $this->enemyPods[$k];*/
 
-            if ($distance > 1000) {
-                $eSpeed = $this->get_speed_enemy($taran, $enemy);
+            $angle = $this->angleBetweenVectors($taran, $closestEnemy);
 
-                //$angle = ceil($this->angleBetweenVectors($taran, $enemy));
+            if ($angle > 10) {
+                //error_log(var_export('angle - ' . $angle, true));
+                $go = $this->mirrorVektor($taran, $closestEnemy);
+                $go['x'] += $taran['x'];
+                $go['y'] += $taran['y'];
 
-                return $new['x'] . ' ' . $new['y'] . " $eSpeed\n";
+                //error_log(var_export('mirror - ', true));
+                //error_log(var_export($go, true));
             } else {
-                return $new['x'] . ' ' . $new['y'] . " SHIELD\n";
+                $go = array('x' => $closestEnemy['x'], 'y' => $closestEnemy['y']);
             }
+
+            $eSpeed = $this->get_speed_enemy($taran, $closestEnemy);
+
+            return $go['x'] . ' ' . $go['y'] . " $eSpeed T\n";
         }
 
         public function get_speed($pod)
@@ -181,15 +222,15 @@
             //error_log(var_export('distance - ' . $distance, true));
 
             if ($this->startFlag && $distance > 4000) {
-                $speed = 200;
+                $speed = 100;
             } else {
                 $this->startFlag = 0;
 
                 if ($angle < 30 || ($pod['vx'] < 100 && $pod['vy'] < 100)) {
                     $speed = ceil($distance / 20);
 
-                    if ($speed > 200) {
-                        $speed = 200;
+                    if ($speed > 100) {
+                        $speed = 100;
                     } elseif ($speed < 50) {
                         $speed = 50;
                     }
@@ -197,7 +238,7 @@
                 } else {
                     if ($distance < 3000) {
                         $speed = ceil($distance / 30);
-                        $speed = ($speed < 20) ? 200 : $speed;
+                        $speed = ($speed < 20) ? 100 : $speed;
                     } else {
                         $speed = 100;
                     }
@@ -207,19 +248,54 @@
             return $speed;
         }
 
-        public function get_speed_enemy($pod, $enemy)
+        public function get_speed2($pod, $angle)
         {
-            $angle = ceil($this->angleBetweenVectors($pod, $enemy));
-            $distance = $this->get_distance($pod, $enemy);
-            //error_log(var_export('angle - ' . $angle, true));
-            //error_log(var_export('distance - ' . $distance, true));
+            $dist = $this->get_distance($pod, $this->nextPoint);
+            error_log(var_export('dist - ' . $dist, true));
+            error_log(var_export('angle - ' . $angle, true));
+            $lastPoint = count($this->checkPoints) * $this->laps;
 
-
-            if ($angle < 60) {
-                $speed = 200;
+            if ($this->startFlag && $dist > 3000) {
+                $speed = 100;
 
             } else {
-                $speed = 100;
+                $this->startFlag = 0;
+
+                if ($dist > 3000 && ($angle < 120 || $pod['angle'] < 90)) {
+                    $speed = 100;
+                } else {
+                    if ($pod['angle'] > 90) {
+                        $speed = 30;
+                    } else {
+                        $speed = 100;
+                    }
+                }
+            }
+
+            //if ($this->podsLap['lap'][$index] == $lastPoint) $speed = 100;
+            error_log(var_export('boost - ' . $this->Boost, true));
+            if ($pod['angle'] < 20 && $dist > 4000 && $this->Boost) {
+                $speed = "BOOST";
+                $this->Boost--;
+            }
+
+            return $speed;
+        }
+
+        public function get_speed_enemy($pod, $enemy)
+        {
+            $distance = $this->get_distance($pod, $enemy);
+
+            if ($distance > 1000) {
+                $angle = ceil($this->angleBetweenVectors($pod, $enemy));
+
+                if ($angle < 60) {
+                    $speed = 100;
+                } else {
+                    $speed = 50;
+                }
+            } else {
+                $speed = "SHIELD";
             }
 
             return $speed;
@@ -257,13 +333,19 @@
             $B['x'] = $point['x'] - $pod['x'];
             $B['y'] = $point['y'] - $pod['y'];
 
-            $mirror = []; // mirror vektor from pod to point
+            /*$mirror = []; // mirror vektor from pod to point
             $mirror['x'] = 2 * $pod['vx'] - $B['x'];
             $mirror['y'] = 2 * $pod['vy'] - $B['y'];
 
             $new['x'] = $pod['x'] - $mirror['x'];
-            $new['y'] = $pod['y'] - $mirror['y'];
+            $new['y'] = $pod['y'] - $mirror['y'];*/
 
-            return $new;
+
+            $V['x'] = $B['x'] - 2 * $pod['vx'];
+            $V['y'] = $B['y'] - 2 * $pod['vy'];
+
+            return $V;
         }
     }
+
+    
