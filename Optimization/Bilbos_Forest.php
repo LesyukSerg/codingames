@@ -35,7 +35,7 @@
 
             for ($i = 0; $i < $count; $i++) {
                 if (count($this->Forest)) {
-                    $step = $this->find_letter_in_forest($this->Phrase[$i]);
+                    $step = $this->find_way_in_forest($this->Phrase[$i]);
 
                 } else {
                     $step = $this->choose_shortest_way(' ', $this->Phrase[$i]);
@@ -69,16 +69,16 @@
 
         public function choose_shortest_way($current, $letter)
         {
-            $tmpStep = [];
+            $possibleSteps = [];
             $step = $this->find_letter($current, $letter, 0); //forward
-            $tmpStep[strlen($step)] = $step;
+            $possibleSteps[strlen($step)] = $step;
 
             $step = $this->find_letter($current, $letter, 1); //backward
-            $tmpStep[strlen($step)] = $step;
+            $possibleSteps[strlen($step)] = $step;
 
-            ksort($tmpStep);
+            ksort($possibleSteps);
 
-            return current($tmpStep);
+            return current($possibleSteps);
         }
 
         public function find_letter($current, $need, $back = 0)
@@ -116,16 +116,17 @@
             return $steps;
         }
 
-        public function find_letter_in_forest($need)
+        public function find_way_in_forest($need)
         {
-            $tmpStep = [];
+            $possibleSteps = [];
             $i = $this->BilboPos;
 
+            // move forward ---
             $shift = '';
             while (isset($this->Forest[$i])) {
                 $step = $shift . $this->choose_shortest_way($this->Forest[$i], $need);
                 $shift .= '>';
-                $tmpStep[strlen($step)] = $step;
+                $possibleSteps[strlen($step)] = $step;
                 $i++;
 
                 if ($i == 30) {
@@ -135,17 +136,15 @@
                 if ($this->BilboPos == $i) break;
             }
 
-            if ($i < 30) {
-                $step = $shift . $this->choose_shortest_way(' ', $need);
-                $tmpStep[strlen($step)] = $step;
-            }
+            $step = $shift . $this->choose_shortest_way(' ', $need);
+            $possibleSteps[strlen($step)] = $step;
 
-
+            // move backward ---
             $i = $this->BilboPos;
             $shift = '';
             while (isset($this->Forest[$i])) {
                 $step = $shift . $this->choose_shortest_way($this->Forest[$i], $need);
-                $tmpStep[strlen($step)] = $step;
+                $possibleSteps[strlen($step)] = $step;
                 $shift .= '<';
                 $i--;
 
@@ -156,14 +155,12 @@
                 if ($this->BilboPos == $i) break;
             }
 
-            if ($i < 30) {
-                $step = $shift . $this->choose_shortest_way(' ', $need);
-                $tmpStep[strlen($step)] = $step;
-            }
+            $step = $shift . $this->choose_shortest_way(' ', $need);
+            $possibleSteps[strlen($step)] = $step;
 
-            ksort($tmpStep);
+            ksort($possibleSteps);
 
-            return current($tmpStep);
+            return current($possibleSteps);
         }
 
         public function compress()
