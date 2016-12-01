@@ -15,7 +15,7 @@
         $myTeam = [];
         $opponentTeam = [];
         $bludger = [];
-        $snaffle = [];
+        $snaffles = [];
 
         fscanf(STDIN, "%d",
             $entities // number of entities still in game
@@ -47,26 +47,25 @@
                 $bludger[$item['entityId']] = $item;
 
             } elseif ($item['entityType'] == 'SNAFFLE') {
-                $snaffle[$item['entityId']] = $item;
+                $snaffles[$item['entityId']] = $item;
             }
         }
 
 
+        $dist[0] = min_distance_to($snaffles, $myTeam[0]);
+        $dist[1] = min_distance_to($snaffles, $myTeam[1]);
 
-        $dist[0] = min_distance_to($snaffle, $myTeam[0]);
-        $dist[1] = min_distance_to($snaffle, $myTeam[1]);
-
-        if ($dist[0]['item']['entityId'] == $dist[1]['item']['entityId'] && count($snaffle) > 1) {
-            unset($snaffle[$dist[0]['item']['entityId']]);
+        if ($dist[0]['item']['entityId'] == $dist[1]['item']['entityId'] && count($snaffles) > 1) {
+            unset($snaffles[$dist[0]['item']['entityId']]);
 
             if ($dist[1]['dist'] > $dist[0]['dist']) {
-                $dist[1] = min_distance_to($snaffle, $myTeam[1]);
+                $dist[1] = min_distance_to($snaffles, $myTeam[1]);
             } else {
-                $dist[0] = min_distance_to($snaffle, $myTeam[0]);
+                $dist[0] = min_distance_to($snaffles, $myTeam[0]);
             }
         }
 
-        $closest = min_distance_to($snaffle, $GOAL[$myTeamId]);
+        $closest = min_distance_to($snaffles, $GOAL[$myTeamId]);
 
         $myTeam[0]['dist'] = get_distance($GOAL[$myTeamId], $myTeam[0]);
         $myTeam[1]['dist'] = get_distance($GOAL[$myTeamId], $myTeam[1]);
@@ -87,39 +86,54 @@
         foreach ($myTeam as $N => $player) {
             //error_log(var_export($player, true));
             if (!$player['state']) {
-                $distances = [];
-
-                if ($player['type'] == 'SHEILD') {
-                    $closest = min_distance_to($snaffle, $GOAL[$myTeamId]);
-
-                } else {
-                    $closest = $dist[$N];
+                $sVX = [];
+                foreach ($snaffles as $k => $one) {
+                    $sVX[$k] = abs($one['vx']);
                 }
+                $maxSpeed = max($sVX);
+                $k = array_search($maxSpeed, $sVX);
+                $fastestDist = get_distance($snaffles[$k], $GOAL[$myTeamId]);
 
-                //error_log(var_export($closest, true));
-
-
-                $player['dist'] = get_distance($GOAL[$myTeamId], $player);
-                $distance = get_distance($GOAL[$myTeamId], $closest['item']);
-                //error_log(var_export('player to my - '.$player['dist'], true));
-                //error_log(var_export('dot to my - '.$distance, true));
+                if ($fastestDist > 2000 && $fastestDist < 8000 && $maxSpeed > 1500 && $manna > 10) { //STOP
+                    error_log(var_export($fastestDist, true));
 
 
-                if ((abs($closest['item']['vx']) > 1500 || $distance < 500) && $manna > 10) {
-                    echo "PETRIFICUS {$closest['item']['entityId']}\n";
+                    echo "PETRIFICUS {$k} STOP\n";
                     $manna -= 10;
 
-                } elseif ($player['dist'] > $distance && $manna > 20) {
-                    echo "ACCIO {$closest['item']['entityId']}\n";
-                    $manna -= 20;
-
-
                 } else {
-                    if (isset($closest['item']['x'])) {
-                        echo "MOVE {$closest['item']['x']} {$closest['item']['y']} 150\n";
+                    $distances = [];
+
+                    if ($player['type'] == 'SHEILD') {
+                        $closest = min_distance_to($snaffles, $GOAL[$myTeamId]);
 
                     } else {
-                        echo "MOVE {$GOAL[$myTeamId]['x']} {$GOAL[$myTeamId]['y']} 150\n";
+                        $closest = $dist[$N];
+                    }
+
+                    //error_log(var_export($closest, true));
+
+
+                    $player['dist'] = get_distance($GOAL[$myTeamId], $player);
+                    $distance = get_distance($GOAL[$myTeamId], $closest['item']);
+                    //error_log(var_export('player to my - '.$player['dist'], true));
+                    //error_log(var_export('dot to my - '.$distance, true));
+
+                    if ($player['dist'] - $distance > 2000 && $manna > 20) {
+                        echo "ACCIO {$closest['item']['entityId']}\n";
+                        $manna -= 20;
+
+                    } else {
+                        if ($manna > 20 && $distance - $player['dist'] < 2000 && (($closest['item']['x']-$player['x'] > 500  && !$myTeamId) || ($player['x']-$closest['item']['x']>500 && $myTeamId))) {
+                            echo "FLIPENDO {$closest['item']['entityId']}\n";
+                            $manna -= 20;
+
+                        } elseif (isset($closest['item']['x'])) {
+                            echo "MOVE {$closest['item']['x']} {$closest['item']['y']} 150\n";
+
+                        } else {
+                            echo "MOVE {$GOAL[$myTeamId]['x']} {$GOAL[$myTeamId]['y']} 150\n";
+                        }
                     }
                 }
 
@@ -130,7 +144,7 @@
 
                 $distanceToGoal = get_distance($GOAL[$opponent], $player);
 
-                echo "THROW {$gX} {$gY} 500\n";
+                echo "THROW {$gX} {$gY} 500 PASS\n";
             }
             // Write an action using echo(). DON'T FORGET THE TRAILING \n
             // To debug (equivalent to var_dump): error_log(var_export($var, true));
