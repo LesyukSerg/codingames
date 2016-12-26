@@ -1,21 +1,35 @@
-<?
-    $GOAL = array(
-        0 => array('x' => 0, 'y' => 3750),
-        1 => array('x' => 16000, 'y' => 3750)
-    );
+<?php
+    /**
+     * Grab Snaffles and try to throw them through the opponent's goal!
+     * Move towards a Snaffle and use your team id to determine where you need to throw it.
+     **/
 
     fscanf(STDIN, "%d",
         $myTeamId // if 0 you need to score on the right of the map, if 1 you need to score on the left
     );
 
+    $GOAL = array(
+        0 => array('x' => 0, 'y' => 3750),
+        1 => array('x' => 16000, 'y' => 3750)
+    );
+
     $team = [];
     $opponent = abs($myTeamId - 1);
-// game loop
+
+    // game loop
     while (true) {
         $myTeam = [];
         $opponentTeam = [];
         $snaffle = [];
 
+        fscanf(STDIN, "%d %d",
+            $myScore,
+            $myMagic
+        );
+        fscanf(STDIN, "%d %d",
+            $opponentScore,
+            $opponentMagic
+        );
         fscanf(STDIN, "%d",
             $entities // number of entities still in game
         );
@@ -47,7 +61,15 @@
             }
         }
 
+        $myTeam['SHEILD']['dist'] = get_distance($GOAL[$myTeamId], $myTeam['SHEILD']);
+        $myTeam['SPRINTER']['dist'] = get_distance($GOAL[$myTeamId], $myTeam['SPRINTER']);
 
+        // Write an action using echo(). DON'T FORGET THE TRAILING \n
+        // To debug (equivalent to var_dump): error_log(var_export($var, true));
+
+        if ($myTeam['SPRINTER']['dist'] < $myTeam['SHEILD']['dist']) {
+            list($myTeam['SPRINTER'], $myTeam['SHEILD']) = array($myTeam['SPRINTER'], $myTeam['SHEILD']);
+        }
 
         $myTeam['SHEILD']['dist'] = get_distance($GOAL[$myTeamId], $myTeam['SHEILD']);
         $myTeam['SPRINTER']['dist'] = get_distance($GOAL[$myTeamId], $myTeam['SPRINTER']);
@@ -63,7 +85,7 @@
                 $distances = [];
 
                 foreach ($snaffle as $k => $one) {
-                    if($type == 'SHEILD') {
+                    if ($type == 'SHEILD') {
                         $distance = get_distance($GOAL[$myTeamId], $one);
                     } else {
                         $distance = get_distance($player, $one);
@@ -71,11 +93,11 @@
 
 
                     $distances[$distance] = $k;
-                    error_log(var_export($snaffle[$k]['entityId']." = ".$distance, true));
+                    //error_log(var_export($snaffle[$k]['entityId']." = ".$distance, true));
                 }
                 ksort($distances);
                 $team[$type] = $k = current($distances);
-                error_log(var_export($snaffle, true));
+                //error_log(var_export($snaffle, true));
 
                 if (isset($snaffle[$k]['x'])) {
                     echo("MOVE {$snaffle[$k]['x']} {$snaffle[$k]['y']} 150\n");
@@ -102,7 +124,6 @@
 
         }
     }
-
 
     function get_distance($one, $two)
     {

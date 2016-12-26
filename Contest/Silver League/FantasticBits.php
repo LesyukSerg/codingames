@@ -1,15 +1,21 @@
-<?
-    $GOAL = array(
-        0 => array('x' => 0, 'y' => 3750),
-        1 => array('x' => 16000, 'y' => 3750)
-    );
+<?php
+    /**
+     * Grab Snaffles and try to throw them through the opponent's goal!
+     * Move towards a Snaffle and use your team id to determine where you need to throw it.
+     **/
 
     fscanf(STDIN, "%d",
         $myTeamId // if 0 you need to score on the right of the map, if 1 you need to score on the left
     );
 
+    $GOAL = array(
+        0 => array('x' => 0, 'y' => 3750),
+        1 => array('x' => 16000, 'y' => 3750)
+    );
+
     $manna = 0;
     $opponent = abs($myTeamId - 1);
+
     // game loop
     while (true) {
         $myTeam = [];
@@ -17,6 +23,14 @@
         $bludger = [];
         $snaffles = [];
 
+        fscanf(STDIN, "%d %d",
+            $myScore,
+            $myMagic
+        );
+        fscanf(STDIN, "%d %d",
+            $opponentScore,
+            $opponentMagic
+        );
         fscanf(STDIN, "%d",
             $entities // number of entities still in game
         );
@@ -50,7 +64,6 @@
                 $snaffles[$item['entityId']] = $item;
             }
         }
-
 
         $dist[0] = min_distance_to($snaffles, $myTeam[0]);
         $dist[1] = min_distance_to($snaffles, $myTeam[1]);
@@ -124,7 +137,7 @@
                         $manna -= 20;
 
                     } else {
-                        if ($manna > 20 && $distance - $player['dist'] < 2000 && (($closest['item']['x']-$player['x'] > 500  && !$myTeamId) || ($player['x']-$closest['item']['x']>500 && $myTeamId))) {
+                        if ($manna > 20 && $distance - $player['dist'] < 2000 && (($closest['item']['x'] - $player['x'] > 500 && !$myTeamId) || ($player['x'] - $closest['item']['x'] > 500 && $myTeamId))) {
                             echo "FLIPENDO {$closest['item']['entityId']}\n";
                             $manna -= 20;
 
@@ -144,7 +157,7 @@
 
                 $distanceToGoal = get_distance($GOAL[$opponent], $player);
 
-                echo "THROW {$gX} {$gY} 500 PASS\n";
+                echo "THROW {$gX} {$gY} 500\n";
             }
             // Write an action using echo(). DON'T FORGET THE TRAILING \n
             // To debug (equivalent to var_dump): error_log(var_export($var, true));
@@ -155,7 +168,6 @@
             $manna++;
         }
     }
-
 
     function get_distance($one, $two)
     {
