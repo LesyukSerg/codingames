@@ -41,14 +41,21 @@
             $actions[] = $action;
         }
 
-        $myAction = analyzeMove($map, $unitY, $unitX);
+        $first = $myAction = analyzeMove($map, $unitY, $unitX);
+        $n = 0;
         while (!nextMoveAvailable($map, $myAction)) {
             $X = $myAction['new_XY'][0];
             $Y = $myAction['new_XY'][1];
             $map[$Y][$X] = '.';
 
             $myAction = analyzeMove($map, $unitY, $unitX);
+
+            if (++$n > 8) {
+                $myAction = $first;
+                break;
+            }
         }
+
         //$map[$unitY][$unitX] = 'X';
         //drawMap($map);
 
@@ -65,6 +72,11 @@
     {
         $X = $myAction['new_XY'][0];
         $Y = $myAction['new_XY'][1];
+
+        $oX = $myAction['old_XY'][0];
+        $oY = $myAction['old_XY'][1];
+        $map[$oY][$oX] = '.';
+
         $bX = $myAction['build']['xy'][0];
         $bY = $myAction['build']['xy'][0];
         $map[$bY][$bX] = $map[$bY][$bX] + 1;
@@ -85,7 +97,7 @@
         for ($x = $myX - 1; $x <= $myX + 1; $x++) {
             for ($y = $myY - 1; $y <= $myY + 1; $y++) {
                 if ($x != $myX || $y != $myY) {
-                    if (isset($map[$y][$x]) && strlen($map[$y][$x]) > 0 && checkMove($map[$y][$x])) {
+                    if (isset($map[$y][$x]) && strlen($map[$y][$x]) > 0 && checkMove($map[$y][$x]) && (abs($map[$y][$x] - $map[$myY][$myX]) < 2 || $map[$myY][$myX] > $map[$y][$x])) {
                         $pos = $map[$y][$x];
                         $move = [
                             'old_XY' => [$myX, $myY],
@@ -101,6 +113,7 @@
             }
         }
         krsort($possibleToMove);
+
         //error_log(var_export($possibleToMove, true));
 
         return current($possibleToMove);
