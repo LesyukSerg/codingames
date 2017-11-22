@@ -4,15 +4,17 @@
 
     // game loop
     while (true) {
-        $map = [];
+        $unitPOS = $map = [];
         for ($i = 0; $i < $size; $i++) {
             fscanf(STDIN, "%s", $line);
             $map[] = trim($line);
         }
         //error_log(var_export($map, true));
+        $myUnits = [];
 
         for ($i = 0; $i < $unitsPerPlayer; $i++) {
             fscanf(STDIN, "%d %d", $unitX, $unitY);
+            $myUnits[] = ['x' => $unitX, 'y' => $unitY];
         }
         error_log(var_export($unitX . ' ' . $unitY, true));
 
@@ -40,32 +42,82 @@
             //$floor = getFloor($map, $unitX, $unitY, $action);
             $actions[] = $action;
         }
-
-        $first = $myAction = analyzeMove($map, $unitY, $unitX);
-        $n = 0;
-        while (!nextMoveAvailable($map, $myAction)) {
-            $X = $myAction['new_XY'][0];
-            $Y = $myAction['new_XY'][1];
-            $map[$Y][$X] = '.';
-
-            $myAction = analyzeMove($map, $unitY, $unitX);
-
-            if (++$n > 8) {
-                $myAction = $first;
-                break;
+        error_log(var_export($actions, true));
+        //$map[$unitY][$unitX] = 'X';
+        //drawMap($map);
+        $push = 0;
+        foreach ($actions as $action) {
+            if ($action['atype'] == 'PUSH&BUILD') {
+                $push = 1;
             }
         }
 
-        //$map[$unitY][$unitX] = 'X';
-        //drawMap($map);
+        if ($push) {
+            echo("{$action['atype']} {$action['index']} {$action['dir1']} {$action['dir2']}\n");
+        } else {
+            $UnitNumber = 0;
+            $unitX = $myUnits[$UnitNumber]['x'];
+            $unitY = $myUnits[$UnitNumber]['y'];
+            $unitPOS[$myUnits[1]['y']][$myUnits[1]['x']] = $map[$myUnits[1]['y']][$myUnits[1]['x']];
+            $map[$myUnits[1]['y']][$myUnits[1]['x']] = '.';
+            $first = $myAction = analyzeMove($map, $unitY, $unitX);
+            $n = 0;
+            //error_log(var_export($unitPOS, true));
 
-        //$myAction = current($actions);
-        //error_log(var_export($actions, true));
-        // Write an action using echo(). DON'T FORGET THE TRAILING \n
-        // To debug (equivalent to var_dump): error_log(var_export($var, true));
+            while (!nextMoveAvailable($map, $myAction)) {
+                $X = $myAction['new_XY'][0];
+                $Y = $myAction['new_XY'][1];
+                $map[$Y][$X] = '.';
 
-        //echo("{$myAction['atype']} {$myAction['index']} {$myAction['dir1']} {$myAction['dir2']}\n");
-        echo("MOVE&BUILD 0 {$myAction['move']} {$myAction['build']['dir']}\n");
+                $myAction = analyzeMove($map, $unitY, $unitX);
+
+                if (++$n > 8 || !$myAction) {
+                    $myAction = $first;
+                    break;
+                }
+            }
+
+            //drawMap($map);
+
+            if (!$myAction) {
+                foreach ($unitPOS as $y => $line) {
+                    foreach ($line as $x => $pos) {
+                        $map[$y][$x] = $pos;
+                    }
+                }
+
+                //drawMap($map);
+
+                $UnitNumber = 1;
+                $unitX = $myUnits[$UnitNumber]['x'];
+                $unitY = $myUnits[$UnitNumber]['y'];
+                $map[$myUnits[0]['y']][$myUnits[1]['x']] = '.';
+                $first = $myAction = analyzeMove($map, $unitY, $unitX);
+                $n = 0;
+
+                while (!nextMoveAvailable($map, $myAction)) {
+                    $X = $myAction['new_XY'][0];
+                    $Y = $myAction['new_XY'][1];
+                    $map[$Y][$X] = '.';
+
+                    $myAction = analyzeMove($map, $unitY, $unitX);
+
+                    if (++$n > 8 || !$myAction) {
+                        $myAction = $first;
+                        error_log(var_export($myAction, true));
+                        break;
+                    }
+                }
+            }
+
+            //$myAction = current($actions);
+            //error_log(var_export($actions, true));
+            // Write an action using echo(). DON'T FORGET THE TRAILING \n
+            // To debug (equivalent to var_dump): error_log(var_export($var, true));
+
+            //echo("{$myAction['atype']} {$myAction['index']} {$myAction['dir1']} {$myAction['dir2']}\n");
+            echo("MOVE&BUILD {$UnitNumber} {$myAction['move']} {$myAction['build']['dir']}\n");
+        }
     }
 
     function nextMoveAvailable($map, $myAction)
@@ -114,8 +166,6 @@
         }
         krsort($possibleToMove);
 
-        //error_log(var_export($possibleToMove, true));
-
         return current($possibleToMove);
     }
 
@@ -155,8 +205,7 @@
                 }
             }
         }
-
-        //krsort($possibleToBuild);
+        krsort($possibleToBuild);
 
         return current($possibleToBuild);
     }
