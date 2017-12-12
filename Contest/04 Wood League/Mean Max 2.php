@@ -99,12 +99,16 @@
                         }
                     }
 
-                    echo "{$min['item']['x']} {$min['item']['y']} 300\n";
+                    $x = $min['item']['x']-$one['vx'];
+                    $y = $min['item']['y']-$one['vy'];
+                    echo "{$x} {$y} 300\n";
 
                 } else {
                     if (count($tanker)) {
                         $min = min_distance_to($tanker, $one);
-                        echo "{$min['item']['x']} {$min['item']['y']} 300\n";
+                        $x = $min['item']['x']-$one['vx'];
+                        $y = $min['item']['y']-$one['vy'];
+                        echo "{$x} {$y} 300\n";
                     } else {
                         echo "WAIT\n";
                     }
@@ -113,7 +117,9 @@
             } elseif ($one['type'] == 1) {
                 if (count($tanker)) {
                     $min = min_distance_to($tanker, $one);
-                    echo "{$min['item']['x']} {$min['item']['y']} 300\n";
+                    $x = $min['item']['x']-$one['vx'];
+                    $y = $min['item']['y']-$one['vy'];
+                    echo "{$x} {$y} 300\n";
                 } else {
                     echo "WAIT\n";
                 }
