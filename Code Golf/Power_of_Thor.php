@@ -1,3 +1,3 @@
-<?fscanf(STDIN,"%d %d %d %d",$x,$y,$X,$Y);while(1){if($Y<$y){?>S<?$Y++;}if($Y>$y){?>N<?$Y--;}if($X<$x){?>E<?$X++;}if($X>$x){?>W<?$X--;}?>
+<?list($x,$y,$X,$Y)=fgetcsv(STDIN,0,' ');while(1){echo$Y++<$y?"S":"";echo$X++<$x?"E":(--$X>$x?"W":"");?>
 
 <?}
