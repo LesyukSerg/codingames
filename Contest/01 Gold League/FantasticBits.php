@@ -8,10 +8,10 @@
         $myTeamId // if 0 you need to score on the right of the map, if 1 you need to score on the left
     );
 
-    $GOAL = array(
-        0 => array('x' => 0, 'y' => 3750),
-        1 => array('x' => 16000, 'y' => 3750)
-    );
+    $GOAL = [
+        0 => ['x' => 0, 'y' => 3750],
+        1 => ['x' => 16000, 'y' => 3750]
+    ];
 
     $manna = 0;
     $opponent = abs($myTeamId - 1);
@@ -108,7 +108,7 @@
                 $fastestDist = get_distance($snaffles[$k], $GOAL[$myTeamId]);
 
                 if ($fastestDist > 2000 && $fastestDist < 8000 && $maxSpeed > 1500 && $manna > 10) { //STOP
-                    error_log(var_export($fastestDist, true));
+                    //error_log(var_export($fastestDist, true));
 
 
                     echo "PETRIFICUS {$k} STOP\n";
@@ -187,5 +187,5 @@
         $closest = current($distances);
         $k = array_search($closest, $distances);
 
-        return array('dist' => $closest, 'item' => $elements[$k]);
+        return ['dist' => $closest, 'item' => $elements[$k]];
     }
