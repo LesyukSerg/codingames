@@ -64,6 +64,26 @@
         return 0;
     }
 
+    function accurateProportion($myScore, $carryCnt)
+    {
+        $prop = [ //proportions
+                  5   => [0 => 1, 1 => 1, 2 => 1],
+                  10  => [0 => 2, 1 => 1, 2 => 1],
+                  50  => [0 => 2, 1 => 2, 2 => 1],
+                  100 => [0 => 3, 1 => 2, 2 => 2],
+                  200 => [0 => 3, 1 => 3, 2 => 2],
+                  500 => [0 => 3, 1 => 3, 2 => 3]
+        ];
+
+        foreach ($prop as $score => $need) {
+            if ($myScore < $score) {
+                return $need[$carryCnt];
+            }
+        }
+
+        return 1;
+    }
+
     function throwBad($samples)
     {
         foreach ($samples as $one) {
@@ -85,10 +105,12 @@
         fscanf(STDIN, "%d %d %d %d %d", $a, $b, $c, $d, $e);
     }
 
+    $canCarry = 3;
+
     // game loop
     while (true) {
         $samples = [];
-        $mySample = $need_diagnosis = $one = $enemy = $my = [];
+        $mySample = $needDiagnos = $one = $enemy = $my = [];
         for ($i = 0; $i < 2; $i++) {
             fscanf(STDIN, "%s %d %d %d %d %d %d %d %d %d %d %d %d",
                 $one['target'],
@@ -148,9 +170,10 @@
 
             } elseif ($one['carriedBy'] == 0) {
                 if ($one['health'] == -1) {
-                    $need_diagnosis[$sampleId] = $one;
+                    $needDiagnos[$sampleId] = $one;
                 } else {
-                    $mySample[] = $one;
+                    $mySample[$sampleId . "-" . $one['health']] = $one;
+                    krsort($mySample);
                 }
             }
         }
@@ -162,13 +185,22 @@
                 gotoModule('SAMPLES');
 
             } elseif ($pos == 'SAMPLES') { # === SAMPLES =========================================================
-                if (count($need_diagnosis) + count($mySample) < 3) {
-                    if ($my['score'] < 5) {
+                $carryCnt = count($needDiagnos) + count($mySample);
+                if ($carryCnt < $canCarry) {
+                    $sum = array_sum($my['storage']);
+                    if ($sum == 10) {
                         connect('SAMPLES', 1);
-                    } elseif ($my['score'] > 100) {
-                        connect('SAMPLES', 3);
                     } else {
-                        connect('SAMPLES', 2);
+                        $rank = accurateProportion($my['score'], $carryCnt);
+                        connect('SAMPLES', $rank);
+
+                        /*if ($my['score'] < 5) {
+                            connect('SAMPLES', 1);
+                        } elseif ($my['score'] > 100) {
+                            connect('SAMPLES', 3);
+                        } else {
+                            connect('SAMPLES', 2);
+                        }*/
                     }
                 } else {
                     gotoModule('DIAGNOSIS');
@@ -176,8 +208,8 @@
             } elseif ($pos == 'DIAGNOSIS') { # === DIAGNOSIS =========================================================
                 //error_log(var_export($mySample, true));
 
-                if (count($need_diagnosis)) {
-                    $one = array_shift($need_diagnosis);
+                if (count($needDiagnos)) {
+                    $one = array_shift($needDiagnos);
                     connect('DIAGNOSIS', $one['sampleId']);
 
                 } else {
@@ -191,10 +223,8 @@
                             $sum = array_sum($my['storage']);
 
                             if ($sum == 10) {
-                                foreach ($mySample as $one) {
-                                    connect('DIAGNOSIS', $one['sampleId']);
-                                    break;
-                                }
+                                $one = current($mySample);
+                                connect('DIAGNOSIS', $one['sampleId']);
 
                             } else {
                                 gotoModule('MOLECULES');
@@ -203,15 +233,17 @@
                     } else {
                         if (count($healths)) {
                             krsort($healths);
-                            // error_log(var_export($healths, true));
 
                             $sample = chooseSample($healths, $my['storage'], $my['expertise']);
-                            error_log(var_export('+++', true));
 
                             if ($sample) {
                                 connect('DIAGNOSIS', $sample['sampleId']);
                             } else {
                                 gotoModule('SAMPLES');
+                                //error_log(var_export($healths, true));
+                                //$sample = current($healths);
+                                //error_log(var_export($sample, true));
+                                //connect('DIAGNOSIS', $sample['sampleId']);
                             }
 
                         } else {
@@ -235,7 +267,9 @@
                         if ($sample) {
                             gotoModule('LABORATORY');
                         } else {
-                            if (count($mySample) < 3) {
+                            $waitingSample = chooseSample($healths, $my['storage'], $my['expertise']);
+
+                            if (count($mySample) < $canCarry && !$waitingSample) {
                                 gotoModule('SAMPLES');
                             } else {
                                 gotoModule('DIAGNOSIS');
@@ -247,7 +281,7 @@
                     if ($sample) {
                         gotoModule('LABORATORY');
 
-                    } elseif (count($mySample) < 3) {
+                    } elseif (count($mySample) < $canCarry && !count($healths)) {
                         gotoModule('SAMPLES');
 
                     } else {
@@ -273,7 +307,9 @@
                         }
 
                     } else {
-                        if (count($mySample)) {
+                        $molecule = needMolecules($my['storage'], $mySample, $available, $my['expertise']);
+
+                        if (count($mySample) > 1 && $molecule) {
                             gotoModule('MOLECULES');
 
                         } else {

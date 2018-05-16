@@ -9,12 +9,12 @@
         echo "CONNECT " . $data . " " . $comment . "\n";
     }
 
-    function needMolecules($storage, $samples, $total, $expertise)
+    function needMolecules($storage, $samples, $total)
     {
         $M = 'ABCDE';
-        for ($i = 0; $i < 5; $i++) {
-            $storage[$i] += $expertise[$i];
-        }
+
+
+
 
         foreach ($samples as $sample) {
             foreach ($sample['cost'] as $i => $cnt) {
@@ -40,11 +40,11 @@
         return 0;
     }
 
-    function chooseSample($samples, $storage, $expertise)
+    function chooseSample($samples, $storage)
     {
-        for ($i = 0; $i < 5; $i++) {
-            $storage[$i] += $expertise[$i];
-        }
+
+
+
 
         foreach ($samples as $sample) {
             $ok = 1;
@@ -64,6 +64,63 @@
         return 0;
     }
 
+    function collectLesser($available)
+    {
+        $M = 'ABCDE';
+        asort($available);
+
+        foreach($available as $k => $count) {
+            if ($count) {
+                return $M[$k];
+            }
+        }
+
+        return 0;
+    }
+
+    function accurateProportion($myScore, $carryCnt)
+    {
+        $prop = [ //proportions
+            5   => [0 => 1, 1 => 1, 2 => 2],
+            10  => [0 => 2, 1 => 2, 2 => 2],
+            50  => [0 => 2, 1 => 2, 2 => 2],
+            100 => [0 => 2, 1 => 2, 2 => 2],
+            200 => [0 => 3, 1 => 2, 2 => 2],
+            500 => [0 => 3, 1 => 3, 2 => 3]
+        ];
+
+        $prop = [ //proportions
+            5   => [0 => 2, 1 => 1, 2 => 1],
+            10  => [0 => 2, 1 => 2, 2 => 1],
+            50  => [0 => 2, 1 => 2, 2 => 1],
+            100 => [0 => 2, 1 => 2, 2 => 2],
+            150 => [0 => 3, 1 => 2, 2 => 2],
+            200 => [0 => 3, 1 => 3, 2 => 2],
+            300 => [0 => 3, 1 => 3, 2 => 2]
+        ];
+
+        foreach ($prop as $score => $need) {
+            if ($myScore < $score) {
+                return $need[$carryCnt];
+            }
+        }
+
+        return 1;
+    }
+
+    function badForProject($mySample, $projects)
+    {
+        foreach ($mySample as $sample) {
+            $gain = $sample['gain'];
+
+            if (!$projects[$gain]) {
+                return $sample;
+            }
+        }
+
+        return 0;
+    }
+
     function throwBad($samples)
     {
         foreach ($samples as $one) {
@@ -75,20 +132,40 @@
         return 0;
     }
 
-    /**
-     * Bring data on patient samples from the diagnosis machine to the laboratory with enough molecules to produce medicine!
-     **/
+##================================================================================================
+# Bring data on patient samples from the diagnosis machine to the laboratory with enough molecules to produce medicine!
+##================================================================================================
+
+    $gameStep = 0;
+    $canCarry = 3;
 
     fscanf(STDIN, "%d", $projectCount);
 
     for ($i = 0; $i < $projectCount; $i++) {
+        $n = 0;
         fscanf(STDIN, "%d %d %d %d %d", $a, $b, $c, $d, $e);
+        $n += $a ? 1 : 0;
+        $n += $b ? 1 : 0;
+        $n += $c ? 1 : 0;
+        $n += $d ? 1 : 0;
+        $n += $e ? 1 : 0;
+
+        $projects[$n]['A'] = $a;
+        $projects[$n]['B'] = $b;
+        $projects[$n]['C'] = $c;
+        $projects[$n]['D'] = $d;
+        $projects[$n]['E'] = $e;
     }
+
+    $gameStep = 0;
+    $canCarry = 3;
 
     // game loop
     while (true) {
+        $gameStep += 2;
         $samples = [];
-        $mySample = $need_diagnosis = $one = $enemy = $my = [];
+        $available = $mySample = $needDiagnos = $one = $enemy = $my = [];
+
         for ($i = 0; $i < 2; $i++) {
             fscanf(STDIN, "%s %d %d %d %d %d %d %d %d %d %d %d %d",
                 $one['target'],
@@ -110,10 +187,17 @@
                 $enemy = $one;
             } else {
                 $my = $one;
+                $my['storageCnt'] = array_sum($my['storage']);
+
+                $my['storage'][0] += $my['expertise'][0];
+                $my['storage'][1] += $my['expertise'][1];
+                $my['storage'][2] += $my['expertise'][2];
+                $my['storage'][3] += $my['expertise'][3];
+                $my['storage'][4] += $my['expertise'][4];
             }
         }
 
-        $available = [];
+
         fscanf(STDIN, "%d %d %d %d %d",
             $available[],
             $available[],
@@ -131,7 +215,7 @@
                 $sampleId,
                 $one['carriedBy'],
                 $one['rank'],
-                $one['expertiseGain'],
+                $one['gain'],
                 $one['health'],
                 $one['cost'][],
                 $one['cost'][],
@@ -144,16 +228,21 @@
             $samples[$sampleId] = $one;
 
             if ($one['carriedBy'] == -1) {
-                $healths[$sampleId] = $one;
+                $healths[$one['health'] . "_" . $sampleId] = $one;
 
             } elseif ($one['carriedBy'] == 0) {
                 if ($one['health'] == -1) {
-                    $need_diagnosis[$sampleId] = $one;
+                    $needDiagnos[$sampleId] = $one;
                 } else {
-                    $mySample[] = $one;
+                    $mySample[$one['health'] . "_" . $sampleId] = $one;
+                    //krsort($mySample);
                 }
             }
         }
+
+        //if ($gameStep > 300) {
+        //  $canCarry = 2;
+        //}
 
         if (!$my['eta']) {
             $pos = $my['target'];
@@ -162,39 +251,39 @@
                 gotoModule('SAMPLES');
 
             } elseif ($pos == 'SAMPLES') { # === SAMPLES =========================================================
-                if (count($need_diagnosis) + count($mySample) < 3) {
-                    if ($my['score'] < 5) {
+                $carryCnt = count($needDiagnos) + count($mySample);
+
+                if ($carryCnt < $canCarry) {
+                    $rank = accurateProportion($my['score'], $carryCnt);
+                    connect('SAMPLES', $rank);
+
+                    /*if ($my['score'] < 5) {
                         connect('SAMPLES', 1);
                     } elseif ($my['score'] > 100) {
                         connect('SAMPLES', 3);
                     } else {
                         connect('SAMPLES', 2);
-                    }
+                    }*/
                 } else {
                     gotoModule('DIAGNOSIS');
                 }
             } elseif ($pos == 'DIAGNOSIS') { # === DIAGNOSIS =========================================================
                 //error_log(var_export($mySample, true));
 
-                if (count($need_diagnosis)) {
-                    $one = array_shift($need_diagnosis);
+                if (count($needDiagnos)) {
+                    $one = array_shift($needDiagnos);
                     connect('DIAGNOSIS', $one['sampleId']);
 
                 } else {
-
                     if (count($mySample) > 0) {
-                        $sample = chooseSample($mySample, $my['storage'], $my['expertise']);
+                        $sample = chooseSample($mySample, $my['storage']);
 
                         if ($sample) {
                             gotoModule('LABORATORY');
                         } else {
-                            $sum = array_sum($my['storage']);
-
-                            if ($sum == 10) {
-                                foreach ($mySample as $one) {
-                                    connect('DIAGNOSIS', $one['sampleId']);
-                                    break;
-                                }
+                            if ($my['storageCnt'] == 10) {
+                                $one = current($mySample);
+                                connect('DIAGNOSIS', $one['sampleId']);
 
                             } else {
                                 gotoModule('MOLECULES');
@@ -203,10 +292,8 @@
                     } else {
                         if (count($healths)) {
                             krsort($healths);
-                            // error_log(var_export($healths, true));
 
-                            $sample = chooseSample($healths, $my['storage'], $my['expertise']);
-                            error_log(var_export('+++', true));
+                            $sample = chooseSample($healths, $my['storage']);
 
                             if ($sample) {
                                 connect('DIAGNOSIS', $sample['sampleId']);
@@ -223,19 +310,22 @@
             } elseif ($pos == 'MOLECULES') { # === MOLECULES =========================================================
                 //error_log(var_export($my, true));
                 //error_log(var_export($mySample, true));
+                $molecule = needMolecules($my['storage'], $mySample, $available);
+                $sample = chooseSample($mySample, $my['storage']);
 
-                $sum = array_sum($my['storage']);
-                $molecule = needMolecules($my['storage'], $mySample, $available, $my['expertise']);
-                $sample = chooseSample($mySample, $my['storage'], $my['expertise']);
-
-                if ($sum < 10) {
+                if ($my['storageCnt'] < 10) {
                     if ($molecule) {
                         connect('MOLECULES', $molecule);
+
+                        //} elseif ($gameStep < 200) {
+                        //  $molecule = collectLesser($available);
+                        //connect('MOLECULES', $molecule);
+
                     } else {
                         if ($sample) {
                             gotoModule('LABORATORY');
                         } else {
-                            if (count($mySample) < 3) {
+                            if (count($mySample) < $canCarry) {
                                 gotoModule('SAMPLES');
                             } else {
                                 gotoModule('DIAGNOSIS');
@@ -247,7 +337,7 @@
                     if ($sample) {
                         gotoModule('LABORATORY');
 
-                    } elseif (count($mySample) < 3) {
+                    } elseif (count($mySample) < $canCarry) {
                         gotoModule('SAMPLES');
 
                     } else {
@@ -256,17 +346,16 @@
                 }
 
             } elseif ($pos == 'LABORATORY') { # === LABORATORY ========================================================
-                //error_log(var_export($mySample, true));
-                $sample = chooseSample($mySample, $my['storage'], $my['expertise']);
+                //error_log(var_export('==========', true));
+                //error_log(var_export($my['storage'], true));
+                $sample = chooseSample($mySample, $my['storage']);
 
                 if ($sample) {
                     connect('LABORATORY', $sample['sampleId']);
 
                 } else {
-                    $sum = array_sum($my['storage']);
-
-                    if ($sum == 10) {
-                        if (count($mySample) == 3) {
+                    if ($my['storageCnt'] == 10) {
+                        if (count($mySample) == $canCarry) {
                             gotoModule('DIAGNOSIS');
                         } else {
                             gotoModule('SAMPLES');
@@ -274,7 +363,13 @@
 
                     } else {
                         if (count($mySample)) {
-                            gotoModule('MOLECULES');
+                            $molecule = needMolecules($my['storage'], $mySample, $available);
+
+                            if ($molecule) {
+                                gotoModule('MOLECULES');
+                            } else {
+                                gotoModule('SAMPLES');
+                            }
 
                         } else {
                             gotoModule('SAMPLES');
@@ -286,9 +381,5 @@
             echo "\n";
         }
 
-
-        /*//do {
-        error_log(var_export($id, true));
-
-        }*/
+        //error_log(var_export($id, true));
     }
