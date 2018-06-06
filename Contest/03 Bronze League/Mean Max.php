@@ -85,7 +85,7 @@
                 'y'      => $y,
                 'vx'     => $vx,
                 'vy'     => $vy,
-                'z1'     => $extra,
+                'water'  => $extra,
                 'z2'     => $extra2
             ];
             $allUnits = $unit;
@@ -107,7 +107,9 @@
                 $lake[$unitId] = $unit;
 
             } elseif ($unitType == 3) {
-                $tanker[$unitId] = $unit;
+                if (abs($unit['x']) < 5000 && abs($unit['y']) < 5000) {
+                    $tanker[$unitId] = $unit;
+                }
             }
         }
         //error_log(var_export($units, true));

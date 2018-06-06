@@ -14,13 +14,13 @@
         fscanf(STDIN, "%d %d %d %d",
             $siteId,
             $x,
-            $y,
+            $posY,
             $radius
         );
         $sites[$siteId] = [
             'siteID' => $siteId,
             'x' => $x,
-            'y' => $y,
+            'y' => $posY,
             'radius' => $radius
         ];
     }
@@ -56,14 +56,14 @@
         for ($i = 0; $i < $numUnits; $i++) {
             fscanf(STDIN, "%d %d %d %d %d",
                 $x,
-                $y,
+                $posY,
                 $owner,
                 $unitType, // -1 = QUEEN, 0 = KNIGHT, 1 = ARCHER
                 $health
             );
             //error_log(var_export("$x $y", true));
             $align = ['-1' => 'QUEEN', '0' => 'KNIGHT', '1' => 'ARCHER'];
-            $one = ['x' => $x, 'y' => $y];
+            $one = ['x' => $x, 'y' => $posY];
 
             if ($owner === 0) {
                 $myUnits[$align[$unitType]][] = $one;

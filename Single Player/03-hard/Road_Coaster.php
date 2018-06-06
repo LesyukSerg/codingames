@@ -33,8 +33,8 @@
             if (isset($cache[$start])) {
                 $indexG = $cache[$start]['ind'];
                 $rez[0] = $cache[$start]['sum'];
-            } else {
 
+            } else {
                 while ($indexG != $stop && $next <= $L) {
                     $rez[0] = $next;
                     $indexG = $indexes[$indexG];

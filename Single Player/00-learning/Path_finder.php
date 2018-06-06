@@ -33,7 +33,7 @@
 
     showMAP($MAP, 16, 10);
     //die;
-    goToExit($MAP, $sX, $sY);
+    goToNext($MAP, $sX, $sY);
     echo "\n";
     //error_log(var_export($MAP, true));
     // Write an action using echo(). DON'T FORGET THE TRAILING \n

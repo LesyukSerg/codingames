@@ -41,17 +41,18 @@
     }
 
     $try = $myB = '';
+    $cnt
     // game loop
     while (true) {
         fscanf(STDIN, "%d %d", $gold, $touchedSite); // -1 if none
         $mySitesDist = $freeSitesDist = $enemyUnits = $myUnits = $enemySites = $freeSites = $mySites = [];
-
+        $alignS = ['-1' => 'FREE', '0' => 'MINE', '1' => 'TOWER', '2' => 'BARRACK'];
         for ($i = 0; $i < $numSites; $i++) {
             fscanf(STDIN, "%d %d %d %d %d %d %d",
                 $siteId,
                 $ignore1, // used in future leagues
                 $ignore2, // used in future leagues
-                $structureType, // -1 = No structure, 1 = Tower 2 = Barracks
+                $structureType, // -1 = No structure, 1 = Tower 2 = Barracks 0 - MINE
                 $owner, // -1 = No structure, 0 = Friendly, 1 = Enemy
                 $param1,
                 $param2
@@ -59,18 +60,21 @@
 
             $sites[$siteId]['structureType'] = $structureType;
             $sites[$siteId]['owner'] = $owner;
+            $sites[$siteId]['level'] = $param1;
             $sites[$siteId]['range'] = $param2;
+            $type = $alignS[$structureType];
 
             if ($owner === 0) {
-                $mySites[$siteId] = $sites[$siteId];
+                $mySites[$type][$siteId] = $sites[$siteId];
             } elseif ($owner === 1) {
-                $enemySites[$siteId] = $sites[$siteId];
+                $enemySites[$type][$siteId] = $sites[$siteId];
             } else {
                 $freeSites[$siteId] = $sites[$siteId];
             }
         }
 
         fscanf(STDIN, "%d", $numUnits);
+        $align = ['-1' => 'QUEEN', '0' => 'KNIGHT', '1' => 'ARCHER'];
 
         for ($i = 0; $i < $numUnits; $i++) {
             fscanf(STDIN, "%d %d %d %d %d",
@@ -81,7 +85,6 @@
                 $health
             );
             //error_log(var_export("$x $y", true));
-            $align = ['-1' => 'QUEEN', '0' => 'KNIGHT', '1' => 'ARCHER'];
             $one = ['x' => $x, 'y' => $posY];
 
             if ($owner === 0) {
@@ -101,8 +104,14 @@
             echo "BUILD {$closestFree['id']} BARRACKS-KNIGHT";
             $myB = $closestFree['id'];
         } else {
-            $closestFree = minDist($mySites[$myB], $freeSites);
+            $closestFree = minDist($mySites['BARRACK'][$myB], $freeSites);
             //$closestFree = minDist($myUnits['QUEEN'][0], $freeSites);
+
+            if (count($mySites['MINE'])) {
+
+            }
+
+
 
             if (count($freeSites) > 7) {
                 if (count($enemyUnits) > 1) {

@@ -3,7 +3,7 @@
         $enemies = [];
         $data = [];
 
-        fscanf(STDIN, "%d %d", $x, $y);
+        fscanf(STDIN, "%d %d", $x, $posY);
         fscanf(STDIN, "%d", $dataCount);
 
         for ($i = 0; $i < $dataCount; $i++) {
@@ -31,7 +31,7 @@
 
         $distances = [];
 
-        $res = closest($enemies, $x, $y);
+        $res = closest($enemies, $x, $posY);
         $distances[$res['dist']] = $res['key'];
 
         ksort($distances);
@@ -46,7 +46,7 @@
             } else {
                 $closest = $enemies[$id];
                 $runX = ($x - $closest['x']) + $x;
-                $runY = ($y - $closest['y']) + $y;
+                $runY = ($posY - $closest['y']) + $posY;
                 //error_log(var_export('rX='.$runX."|".'rY='.$runY, true));
 
                 if ($runX > 16000) $runX = 16000;

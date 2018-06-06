@@ -15,16 +15,16 @@
             fscanf(STDIN, "%d %d %d %d %d %d",
                 $entityType,
                 $owner,
-                $x,
-                $y,
+                $posX,
+                $posY,
                 $param1,
                 $param2
             );
 
             $temp = array(
                 'entityType' => $entityType,
-                'x'          => $x,
-                'y'          => $y,
+                'x'          => $posX,
+                'y'          => $posY,
                 'bombs'      => $param1,
                 'range'      => $param2
             );

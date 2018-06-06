@@ -70,15 +70,15 @@
     for ($i = 0; $i < $bushAndSpawnPointCount; $i++) {
         fscanf(STDIN, "%s %d %d %d",
             $entityType, // BUSH, from wood1 it can also be SPAWN
-            $x,
-            $y,
+            $posX,
+            $posY,
             $radius
         );
 
         $point = [
             "type"   => $entityType, // BUSH, from wood1 it can also be SPAWN
-            "x"      => $x,
-            "y"      => $y,
+            "x"      => $posX,
+            "y"      => $posY,
             "radius" => $radius
         ];
     }
@@ -137,8 +137,8 @@
                 $unitId,
                 $team,
                 $unitType, // UNIT, HERO, TOWER, can also be GROOT from wood1
-                $x,
-                $y,
+                $posX,
+                $posY,
                 $attackRange,
                 $health,
                 $maxHealth,
@@ -162,8 +162,8 @@
                 'id'               => $unitId,
                 'team'             => $team,
                 'type'             => $unitType,         // UNIT, HERO, TOWER, can also be GROOT from wood1
-                'x'                => $x,
-                'y'                => $y,
+                'x'                => $posX,
+                'y'                => $posY,
                 'attackRange'      => $attackRange,
                 'health'           => $health,
                 'maxHealth'        => $maxHealth,
