@@ -38,7 +38,7 @@
             }
         }
 
-        return array('in' => $inPhrase, 'pos' => $pos);
+        return ['in' => $inPhrase, 'pos' => $pos];
     }
 
     function step_one($phrase)
