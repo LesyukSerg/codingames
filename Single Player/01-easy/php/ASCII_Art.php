@@ -1,25 +1,27 @@
 <?php
-    // Read inputs from STDIN. Print outputs to STDOUT.
-    fscanf(STDIN, "%d", $LetterNumber);
-    fscanf(STDIN, "%d", $HeightLetter);
 
-    $Text = stream_get_line(STDIN, 256, "\n");
-    $alpha = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    // Read inputs from STDIN. Print outputs to STDOUT.
+    fscanf(STDIN, "%d", $letterNumber);
+    fscanf(STDIN, "%d", $heightLetter);
+
+    $text = stream_get_line(STDIN, 256, "\n");
+    $abc = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
     // To debug (equivalent to var_dump): error_log(var_export($var, true));
 
-    $Text = strtoupper($Text);
+    $text = strtoupper($text);
 
-    for ($i = 0; $i < $HeightLetter; $i++) {
-        $LINE = stream_get_line(STDIN, 1024, "\n");
+    for ($i = 0; $i < $heightLetter; $i++) {
+        $line = stream_get_line(STDIN, 1024, "\n");
 
-        for ($k = 0; $k < strlen($Text); $k++) {
-            $pos = strpos($alpha, $Text[$k]);
+        for ($k = 0; $k < strlen($text); $k++) {
+            $pos = strpos($abc, $text[$k]);
 
-            if ($pos === false) $pos = 26;
+            if ($pos === false) {
+                $pos = 26;
+            }
 
-            echo substr($LINE, $pos * $LetterNumber, $LetterNumber);
-
+            echo substr($line, $pos * $letterNumber, $letterNumber);
         }
 
         echo "\n";

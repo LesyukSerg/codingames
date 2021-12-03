@@ -1,34 +1,28 @@
-<?php
-    fscanf(STDIN, "%d %d %d %d",
-        $LX, // the X position of the light of power
-        $LY, // the Y position of the light of power
-        $TX, // Thor's starting X position
-        $TY // Thor's starting Y position
-    );
-    $X = $TX;
-    $Y = $TY;
-    // game loop
+<?
+    fscanf(STDIN, "%d %d %d %d", $endX, $endY, $ThorX, $ThorY);
+
     while (true) {
-        fscanf(STDIN, "%d", $E); // The level of Thor's remaining energy, representing the number of moves he can still make.
+        fscanf(STDIN, "%d", $E);
+        // A single line providing the move to be made: N NE E SE S SW W or NW
 
-        if ($Y < $LY) {
+        if ($ThorY < $endY) {
             echo 'S';
-            $Y++;
-        } elseif ($TY > $LY) {
+            $ThorY++;
+        } elseif ($ThorY > $endY) {
             echo 'N';
-            $Y--;
+            $ThorY--;
         }
 
-        if ($X < $LX) {
+        if ($ThorX < $endX) {
             echo 'E';
-            $X++;
-        } elseif ($X > $LX) {
+            $ThorX++;
+        } elseif ($ThorX > $endX) {
             echo 'W';
-            $X--;
+            $ThorX--;
         }
 
-        // Write an action using echo(). DON'T FORGET THE TRAILING \n
-        // To debug (equivalent to var_dump): error_log(var_export($var, true));
-
-        echo "\n"; // A single line providing the move to be made: N NE E SE S SW W or NW
+        echo "\n";
     }
+
+    // Write an action using echo(). DON'T FORGET THE TRAILING \n
+    // To debug (equivalent to var_dump): error_log(var_export($var, true));
