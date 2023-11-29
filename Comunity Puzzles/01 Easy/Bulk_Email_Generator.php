@@ -11,20 +11,25 @@
 
     //error_log(var_export($lines, true));
     //error_log(var_export($choices, true));
-    $n = 0;
-
-    foreach ($lines as $k => $line) {
-        if (count($choices[$k])) {
-            foreach ($choices[$k] as $choice) {
-                $line = chooseChoice($line, $choice, $n);
-                $n++;
-            }
-        }
-
-        echo $line . "\n";
-    }
+    generateResult($lines, $choices);
 
 # ====================================================================================================================
+
+    function generateResult($lines, $choices)
+    {
+        $n = 0;
+
+        foreach ($lines as $k => $line) {
+            if (count($choices[$k])) {
+                foreach ($choices[$k] as $choice) {
+                    $line = chooseChoice($line, $choice, $n);
+                    $n++;
+                }
+            }
+
+            echo $line . "\n";
+        }
+    }
 
     function getLine(&$i)
     {
