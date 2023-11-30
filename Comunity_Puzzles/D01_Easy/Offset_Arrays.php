@@ -39,11 +39,6 @@
             $this->arrays = $arrays;
         }
 
-        public function lineReplace($search, $replace)
-        {
-            $this->line = str_replace($search, $replace, $this->line);
-        }
-
         public function findResult(): string
         {
             while (strstr($this->line, '[')) {
@@ -65,7 +60,7 @@
             list($full, $name, $key) = $this->getOneKey();
 
             $res = $this->arrays[$name]->getItemByKey($key);
-            $this->lineReplace($full, $res);
+            $this->line = str_replace($full, $res, $this->line);
 
             return $res;
         }
