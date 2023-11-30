@@ -24,7 +24,7 @@
 
         public function getItemByKey($key)
         {
-            return $this->items[$key - $this->firstKey];
+            return $this->items[$key - $this->firstKey] ?: false;
         }
     }
 
@@ -83,7 +83,7 @@
         echo $res->findResult();
     }
 
-    start();
+    //start();
 
     // Write an answer using echo(). DON'T FORGET THE TRAILING \n
     // To debug: error_log(var_export($var, true)); (equivalent to var_dump)
