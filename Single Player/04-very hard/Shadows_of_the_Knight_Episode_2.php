@@ -1,156 +1,188 @@
 <?php
-    //define('STDIN', fopen('input.txt', 'r'));
-
-    function search($bombDir, $WH, $currentPos, &$START, &$END, &$old)
-    {
-        if ($bombDir == 'UNKNOWN') {
-            if ($currentPos > ($WH / 2)) {
-                $step = -ceil($currentPos / 2);
-            } else {
-                $step = ceil(($END - $currentPos) / 2);
-            }
-
-            $new = $currentPos + $step;
-
-        } elseif ($bombDir == 'COLDER') {
-            if ($currentPos < end($old)) {
-                $step = ceil(($END - $START) / 2);
-                $new = $START + $step;
-
-            } else {
-                $step = ceil(($END - $START) / 2);
-                $new = $START + $step;
-            }
-
-        } elseif ($bombDir == 'WARMER') {
-            if ($currentPos < end($old)) {
-                $step = -ceil(($currentPos - $START) / 2);
-                $new = $currentPos + $step;
-            } else {
-                $step = ceil(($END - $currentPos) / 2);
-                $new = $currentPos + $step;
-            }
-        } else {
-            $step = ceil(($END - $START) / 2);
-            $new = $currentPos + $step;
-        }
-
-        return $new;
-    }
-
-    function change_borders($bombDir, &$currentPos, &$START, &$END, &$old, $type)
-    {
-        if ($END - $START > 1) {
-            if ($bombDir == 'UNKNOWN') {
-
-            } elseif ($bombDir == 'COLDER') {
-                if ($currentPos < end($old)) {
-                    $START = end($old) - ceil((end($old) - $currentPos) / 2);
-
-                } else {
-                    $END = end($old) + ceil(($currentPos - end($old)) / 2);
-                }
-
-            } elseif ($bombDir == 'WARMER') {
-                if ($currentPos < end($old)) {
-                    $END = $currentPos + ceil((end($old) - $currentPos) / 2);
-
-                } else {
-                    $START = end($old) + ceil(($currentPos - end($old) + 1) / 2);
-                }
-            } else {
-                $END = $currentPos + ceil(($currentPos - end($old)) / 2);
-                $START = $currentPos;
-            }
-        } else {
-            if ($bombDir == 'COLDER') {
-                $currentPos = $END = $START = end($old);
-
-            } elseif ($bombDir == 'WARMER') {
-                $END = $START = $currentPos;
-            }
-        }
-
-        if ($END - $START < 2 && $type = 'Y') {
-            if ($bombDir == 'COLDER') {
-                $currentPos = $END = $START = end($old);
-
-            } elseif ($bombDir == 'WARMER') {
-                $END = $START = $currentPos;
-            }
-        }
-    }
+//define('STDIN', fopen('input.txt', 'r'));
 
     fscanf(STDIN, "%d %d",
-        $W, // width of the building.
-        $H // height of the building.
+        $w, // width of the building.
+        $h // height of the building.
     );
 
-    fscanf(STDIN, "%d", $N); // maximum number of turns before game over.
-    fscanf(STDIN, "%d %d", $X0, $Y0);
+    fscanf(STDIN, "%d", $turns); // maximum number of turns before game over.
+    fscanf(STDIN, "%d %d", $posX, $posY);
 
-    $START = ['X' => 0, 'Y' => 0];
-    $END = ['X' => $W, 'Y' => $H];
-
-    $newX = $X0;
-    $newY = $Y0;
-
-    $oldX = [$X0];
-    $oldY = [$Y0];
-    // game loop
-    $i = 0;
-    $bombDirOne = '';
-    $bombDir['X'] = "UNKNOWN";
-    $bombDir['Y'] = "UNKNOWN";
+    $start = ['x' => 0, 'y' => 0];
+    $end = ['x' => $w - 1, 'y' => $h - 1];
+    $pos = ['x' => $posX, 'y' => $posY];
+    $historyDir = [];
 
     while (true) {
         //define('STDIN2', fopen('input2.txt', 'r'));
-        $Y0 = $newY;
-        $X0 = $newX;
         // Current distance to the bomb compared to previous distance (COLDER, WARMER, SAME or UNKNOWN)
-        fscanf(STDIN, "%s", $bombDirOne);
+        fscanf(STDIN, "%s", $bombDir);
+        $historyDir[] = $bombDir;
 
-        if ($i % 2 == 1) {
-            $bombDir['Y'] = $bombDirOne;
+        $old[] = $pos;
+        $pos = analyzeDir($bombDir, $start, $end, $pos, $old, $historyDir);
+
+        echo "{$pos['x']} {$pos['y']}\n";
+    }
+
+
+    function analyzeDir($bombDir, &$start, &$end, $pos, $old, $historyDir)
+    {
+        error_log(var_export($bombDir, true));
+        error_log(var_export($old, true));
+        $lastPos = $old[count($old) - 2];
+
+        switch ($bombDir) {
+            case 'COLDER':
+                changeAreaC($lastPos, $pos, $start, $end);
+                list($x, $y) = setNewCoordinate($start, $end, $pos);
+
+                break;
+
+            case 'WARMER':
+                changeAreaW($lastPos, $pos, $start, $end);
+
+                $myStart = $start;
+                $myEnd = $end;
+
+                if ($pos['x'] - $start['x'] > $end['x'] - $pos['x']) {
+                    $myStart['x'] = $start['x'];
+                    $myEnd['x'] = $pos['x'];
+                } else {
+                    $myStart['x'] = $pos['x'];
+                    $myEnd['x'] = $end['x'];
+                }
+
+                if ($pos['y'] - $start['y'] > $end['y'] - $pos['y']) {
+                    $myStart['y'] = $start['y'];
+                    $myEnd['y'] = $pos['y'];
+                } else {
+                    $myStart['y'] = $pos['y'];
+                    $myEnd['y'] = $end['y'];
+                }
+
+                list($x, $y) = setNewCoordinate($myStart, $myEnd, $pos);
+
+                break;
+
+            case 'SAME':
+                changeAreaS($lastPos, $pos, $start, $end);
+                list($x, $y) = setNewCoordinate($start, $end, $pos);
+                break;
+
+            case 'UNKNOWN':
+                list($x, $y) = setNewCoordinate($start, $end, $pos);
+        }
+
+        error_log(var_export('area', true));
+        error_log(var_export($start, true));
+        error_log(var_export($end, true));
+
+        return ['x' => $x, 'y' => $y];
+    }
+
+    function changeAreaW($old, $new, &$start, &$end)
+    {
+        if ($old['x'] < $new['x']) {
+            $newStart = $old['x'] + ceil(($new['x'] - $old['x']) / 2);
+
+            if ($newStart >= $start['x']) {
+                $start['x'] = $newStart;
+            } else {
+                $start['x']++;
+            }
+
+        } elseif ($old['x'] > $new['x']) {
+            $newEnd = $new['x'] + ceil(($old['x'] - $new['x']) / 2);
+
+            if ($newEnd >= $end['x']) {
+                $end['x']--;
+            } else {
+                $end['x'] = $newEnd;
+            }
+        }
+
+        if ($old['y'] < $new['y']) {
+            $newStart = $old['y'] + ceil(($new['y'] - $old['y']) / 2);
+
+            if ($newStart >= $start['y']) {
+                $start['y'] = $newStart;
+            } else {
+                $start['y']++;
+            }
+
+        } elseif ($old['y'] > $new['y']) {
+            $newEnd = $new['y'] + ceil(($old['y'] - $new['y']) / 2);
+
+            if ($newEnd >= $end['y']) {
+                $end['y']--;
+            } else {
+                $end['y'] = $newEnd;
+            }
+        }
+    }
+
+    function changeAreaC($old, $new, &$start, &$end)
+    {
+        if ($old['x'] < $new['x']) {
+            $end['x'] = $old['x'] + ceil(($new['x'] - $old['x']) / 2);
+        } elseif ($old['x'] > $new['x']) {
+            $start['x'] = $new['x'] + ceil(($old['x'] - $new['x']) / 2);
+        }
+
+        if ($old['y'] < $new['x']) {
+            $end['x'] = $old['x'] + ceil(($new['x'] - $old['x']) / 2);
+        } elseif ($old['x'] > $new['x']) {
+            $start['x'] = $new['x'] + ceil(($old['x'] - $new['x']) / 2);
+        }
+
+        if ($old['x'] < $new['x']) {
+            $end['x'] = $old['x'];
+        } elseif ($old['y'] > $new['x']) {
+            $start['x'] = $new['x'];
+        }
+
+        if ($old['y'] < $new['y']) {
+            $end['y'] = $old['y'];
+        } elseif ($old['y'] > $new['y']) {
+            $start['y'] = $new['y'];
+        }
+    }
+
+    function changeAreaS($old, $new, &$start, &$end)
+    {
+        if ($old['x'] != $new['x']) {
+            if ($new['x'] > $old['x']) {
+                $start['x'] = $end['x'] = $old['x'] + ceil(abs($new['x'] - $old['x']) / 2);
+            } else {
+                $start['x'] = $end['x'] = $old['x'] - ceil(abs($new['x'] - $old['x']) / 2);
+            }
+        }
+
+        if ($old['y'] != $new['y']) {
+            if ($new['y'] > $old['y']) {
+                $start['y'] = $end['y'] = $old['y'] + ceil(abs($new['y'] - $old['y']) / 2);
+            } else {
+                $start['y'] = $end['y'] = $old['y'] - ceil(abs($new['y'] - $old['y']) / 2);
+            }
+        }
+    }
+
+    function setNewCoordinate($start, $end, $pos)
+    {
+        if ($start['x'] == $end['x'] && $start['y'] == $end['y']) {
+            $x = $end['x'];
+            $y = $end['y'];
         } else {
-            $bombDir['X'] = $bombDirOne;
-        }
-        // Write an action using echo(). DON'T FORGET THE TRAILING \n
-        // To debug (equivalent to var_dump): error_log(var_export($var, true));
-        if ($X0 + 1 == $W) $END['X'] = $X0;
-        if ($Y0 + 1 == $H) $END['Y'] = $Y0;
-
-
-        change_borders($bombDir['Y'], $Y0, $START['Y'], $END['Y'], $oldY, 'Y');
-        change_borders($bombDir['X'], $X0, $START['X'], $END['X'], $oldX, 'X');
-
-        error_log(var_export("X_I - {$X0}; Y_I - {$Y0}", true));
-        error_log(var_export("Y_START - {$START['Y']}; Y_END - {$END['Y']} | " . "X_START - {$START['X']}; X_END - {$END['X']}", true));
-        error_log(var_export($i, true));
-        error_log(var_export($bombDirOne, true));
-
-        //if ($bombDir == 'UNKNOWN' || $bombDir == 'SAME' || ($Y_END == $Y_START && $i % 2 == 1) /* || ($i % 2 == 1 && $Y_END - $Y_START < 2)*/)
-        if ($bombDir['Y'] == 'SAME') {
-            $i = 2;
-        } elseif ($bombDir['X'] == 'SAME') {
-            $i = 1;
-        } elseif ($bombDirOne == 'WARMER' || $bombDirOne == 'UNKNOWN') {
-            $i++;
+            if (($end['y'] - $start['y']) > ($end['x'] - $start['x'])) {
+                $y = $start['y'] + ceil(($end['y'] - $start['y']) / 2);
+                $x = $pos['x'];
+            } else {
+                $x = $start['x'] + ceil(($end['x'] - $start['x']) / 2);
+                $y = $pos['y'];
+            }
         }
 
-        if ($i % 2 == 1) {
-            $newY = search($bombDir['Y'], $H, $Y0, $START['Y'], $END['Y'], $oldY);
-            $newX = $X0;
-            $oldY[] = $Y0;
-        } else {
-            $newX = search($bombDir['X'], $W, $X0, $START['X'], $END['X'], $oldX);
-            $newY = $Y0;
-            $oldX[] = $X0;
-        }
-
-
-        if ($newY > $H) $newY = $H;
-        if ($newX > $W) $newX = $W;
-
-        echo "{$newX} {$newY}\n";
+        return ['x' => $x, 'y' => $y];
     }
