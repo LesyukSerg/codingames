@@ -1,0 +1,1 @@
+<?$M=trim(fgets(STDIN));foreach(str_split($M)as$c){$b.=str_pad(decbin(ord($c)),7,'0',STR_PAD_LEFT);}foreach(str_split($b)as$o){if($o!=$c){$c=$o;$u.=($o=='0'?' 00 0':' 0 0');}else{$u.='0';}}echo(substr($u,1));

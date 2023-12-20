@@ -1,0 +1,1 @@
+<?while(1){for($i=0;$i<8;$i++){$h[$i]=fgets(STDIN);}arsort($h);echo key($h)."\n";}
